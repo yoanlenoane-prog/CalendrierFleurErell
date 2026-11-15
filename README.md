@@ -12,10 +12,18 @@ La tablette affiche les mêmes commandes tant que l'ordinateur est allumé et qu
 
 ### 1. Installation (une seule fois)
 
-1. Installez **Node.js** : allez sur <https://nodejs.org/fr/download>, téléchargez la version **LTS** pour Windows,
-   ouvrez le fichier téléchargé et cliquez sur « Suivant » jusqu'à la fin (gardez les choix proposés).
-2. Placez le dossier du calendrier où vous voulez, par exemple dans **Documents**.
-   Ne le mettez pas dans « Téléchargements » pour ne pas le supprimer par erreur.
+**a) Installer Node.js** (le petit moteur qui fait tourner le calendrier)
+1. Allez sur <https://nodejs.org/fr/download> et téléchargez la version **LTS** pour Windows.
+2. Ouvrez le fichier téléchargé et cliquez sur « Suivant » jusqu'à la fin, en gardant les choix proposés.
+
+**b) Télécharger le calendrier depuis GitHub**
+1. Allez sur <https://github.com/yoanlenoane-prog/CalendrierFleurErell> (connectez-vous à GitHub si on vous le demande,
+   car le dépôt est privé).
+2. Cliquez sur le bouton vert **< > Code**, puis sur **Download ZIP** (tout en bas de la petite fenêtre).
+3. Ouvrez votre dossier **Téléchargements**, faites un clic droit sur le fichier `CalendrierFleurErell-main.zip`
+   puis **Extraire tout…** → **Extraire**.
+4. Déplacez le dossier obtenu `CalendrierFleurErell-main` dans **Documents** (vous pouvez le renommer, par exemple
+   « Calendrier Arrosé »). Ne le laissez pas dans Téléchargements pour ne pas le supprimer par erreur.
 
 ### 2. Lancer le calendrier (chaque jour)
 
@@ -53,7 +61,13 @@ Les commandes actuelles sont remplacées (une copie de sécurité est gardée da
 En plus, le calendrier garde tout seul une copie des commandes de chaque jour (les 30 derniers jours)
 dans `donnees/sauvegardes-auto`.
 
-### 5. Changer d'ordinateur
+### 5. Installer une nouvelle version
+
+Si je modifie le calendrier, refaites l'étape 1 b) dans un nouveau dossier, puis **copiez le dossier `donnees`**
+de l'ancien dossier du calendrier dans le nouveau (c'est lui qui contient vos commandes et vos photos).
+Par sécurité, faites d'abord une sauvegarde (étape 4).
+
+### 6. Changer d'ordinateur
 
 Installez le calendrier sur le nouvel ordinateur, puis restaurez votre dernière sauvegarde (étape 4),
 ou copiez simplement le dossier `donnees` de l'ancien ordinateur dans le dossier du calendrier.
