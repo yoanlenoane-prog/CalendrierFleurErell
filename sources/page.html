@@ -5,69 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#9E1F3F">
   <title>Calendrier des commandes – Arrosé</title>
-  <link rel="icon" href="fichiers/logo.png">
-  <link rel="stylesheet" href="fichiers/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%239E1F3F'/%3E%3Cpath d='M18 24h28c0 13-6 20-14 20s-14-7-14-20zM32 44v10M24 55h16' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='36' cy='14' r='5' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="entete">
-    <img src="fichiers/logo.png" alt="Arrosé – La cave fleurie" class="logo">
+    <div class="marque" aria-label="Arrosé – La cave fleurie">
+      <svg class="marque-dessin" viewBox="0 0 60 66" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 24h34c0 14-7 21-17 21S13 38 13 24z"/>
+          <path d="M15 32h30" opacity=".55"/>
+          <path d="M30 45v14M21 60h18"/>
+          <path d="M29 31c0-7 2-13 6-19"/>
+          <path d="M31 22c3-3 7-3 10-1-3 3-7 3-10 1z"/>
+          <path d="M28 27c-3-2-7-2-9 0 3 2 7 2 9 0z"/>
+        </g>
+        <g transform="translate(36 10)" fill="none" stroke="currentColor" stroke-width="1.6">
+          <ellipse rx="2.2" ry="5" cy="-5.5"/>
+          <ellipse rx="2.2" ry="5" cy="-5.5" transform="rotate(45)"/>
+          <ellipse rx="2.2" ry="5" cy="-5.5" transform="rotate(90)"/>
+          <ellipse rx="2.2" ry="5" cy="-5.5" transform="rotate(135)"/>
+          <ellipse rx="2.2" ry="5" cy="-5.5" transform="rotate(180)"/>
+          <ellipse rx="2.2" ry="5" cy="-5.5" transform="rotate(225)"/>
+          <ellipse rx="2.2" ry="5" cy="-5.5" transform="rotate(270)"/>
+          <ellipse rx="2.2" ry="5" cy="-5.5" transform="rotate(315)"/>
+          <circle r="2" fill="currentColor"/>
+        </g>
+      </svg>
+      <div class="marque-texte">
+        <span class="marque-nom">Arrosé</span>
+        <span class="marque-sous">La cave fleurie</span>
+      </div>
+    </div>
+
     <div class="recherche">
-      <input type="search" id="recherche" placeholder="Rechercher un client…" autocomplete="off" aria-label="Rechercher un client">
+      <svg class="icone loupe" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+      <input type="search" id="recherche" placeholder="Rechercher un client" autocomplete="off" aria-label="Rechercher un client">
       <div id="resultats" class="resultats" hidden></div>
     </div>
     <div class="actions-entete">
-      <button class="btn btn-clair" id="btn-reglages" title="Sauvegarde">💾 Sauvegarde</button>
-      <button class="btn btn-blanc" id="btn-nouvelle">+ Nouvelle commande</button>
+      <button class="btn btn-clair" id="btn-reglages">Sauvegarde<span class="point-alerte" id="point-sauvegarde" hidden></span></button>
+      <button class="btn btn-blanc" id="btn-nouvelle">Nouvelle commande</button>
     </div>
   </header>
-
-  <div class="rappel" id="rappel-sauvegarde" hidden>
-    <span>💾 <span id="rappel-texte"></span> Pensez à en faire une pour ne rien perdre.</span>
-    <button type="button" class="btn btn-plein btn-petit">Faire une sauvegarde maintenant</button>
-  </div>
 
   <main class="principal">
     <div class="barre-mois">
       <div class="navigation">
-        <button class="btn btn-rond" id="mois-precedent" aria-label="Mois précédent">‹</button>
-        <h1 id="titre-mois">…</h1>
-        <button class="btn btn-rond" id="mois-suivant" aria-label="Mois suivant">›</button>
+        <button class="btn btn-icone" id="mois-precedent" aria-label="Mois précédent" title="Mois précédent">
+          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <h1 id="titre-mois">&nbsp;</h1>
+        <button class="btn btn-icone" id="mois-suivant" aria-label="Mois suivant" title="Mois suivant">
+          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
         <button class="btn btn-contour" id="btn-aujourdhui">Aujourd'hui</button>
       </div>
+      <div class="legende" id="legende"></div>
       <div class="navigation">
-        <div class="legende">
-          <span><i class="pastille type-mariage"></i>Mariage</span>
-          <span><i class="pastille type-bapteme"></i>Baptême</span>
-          <span><i class="pastille type-autre"></i>Autre</span>
-        </div>
+        <button class="lien-rappel" id="rappel-sauvegarde" hidden></button>
         <button class="btn btn-contour" id="btn-commandes-mois">Commandes du mois</button>
       </div>
     </div>
 
     <div class="calendrier">
       <div class="jours-semaine">
-        <div>Lundi</div><div>Mardi</div><div>Mercredi</div><div>Jeudi</div><div>Vendredi</div><div>Samedi</div><div>Dimanche</div>
+        <div><span class="long">Lundi</span><span class="court">Lun</span></div>
+        <div><span class="long">Mardi</span><span class="court">Mar</span></div>
+        <div><span class="long">Mercredi</span><span class="court">Mer</span></div>
+        <div><span class="long">Jeudi</span><span class="court">Jeu</span></div>
+        <div><span class="long">Vendredi</span><span class="court">Ven</span></div>
+        <div><span class="long">Samedi</span><span class="court">Sam</span></div>
+        <div><span class="long">Dimanche</span><span class="court">Dim</span></div>
       </div>
-      <div class="grille" id="grille"></div>
+      <div class="grille" id="grille" title="Cliquez sur un jour pour créer une commande"></div>
     </div>
-    <p class="astuce">Astuce : cliquez sur un jour pour y créer une commande, ou sur une commande pour ouvrir sa fiche.</p>
   </main>
 
-  <!-- Alerte mensuelle -->
+  <!-- Liste des commandes (alerte mensuelle, ou commandes d'un jour) -->
   <div class="fond" id="fenetre-mois" hidden>
     <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-alerte">
       <div class="fenetre-entete">
-        <h2 id="titre-alerte">Commandes du mois</h2>
-        <button class="fermer" data-fermer aria-label="Fermer">×</button>
+        <div>
+          <h2 id="titre-alerte">Commandes du mois</h2>
+          <p class="sous-titre" id="resume-alerte"></p>
+        </div>
+        <button class="fermer" data-fermer aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <div class="fenetre-corps">
-        <p class="sous-titre" id="resume-alerte"></p>
         <table class="tableau">
           <thead><tr><th>Date</th><th>Client</th><th>Évènement</th><th>Statut</th></tr></thead>
           <tbody id="liste-alerte"></tbody>
         </table>
       </div>
-      <div class="fenetre-pied"><button class="btn btn-plein" data-fermer>Fermer</button></div>
+      <div class="fenetre-pied">
+        <button class="btn btn-contour" id="liste-nouvelle" hidden>Ajouter une commande ce jour</button>
+        <span class="espace"></span>
+        <button class="btn btn-plein" data-fermer>Fermer</button>
+      </div>
     </div>
   </div>
 
@@ -75,13 +110,16 @@
   <div class="fond" id="fenetre-fiche" hidden>
     <form class="fenetre fenetre-large" id="fiche" role="dialog" aria-modal="true" aria-labelledby="titre-fiche" novalidate>
       <div class="fenetre-entete">
-        <h2 id="titre-fiche">Nouvelle commande</h2>
-        <button type="button" class="fermer" id="fiche-fermer" aria-label="Fermer">×</button>
+        <div>
+          <h2 id="titre-fiche">Nouvelle commande</h2>
+          <p class="sous-titre" id="sous-titre-fiche"></p>
+        </div>
+        <button type="button" class="fermer" id="fiche-fermer" aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <div class="fenetre-corps fiche-corps">
 
         <section class="bloc">
-          <h3>👤 Client</h3>
+          <h3>Client</h3>
           <div class="champs">
             <label>Nom *<input name="nom" required autocomplete="off"></label>
             <label>Prénom<input name="prenom" autocomplete="off"></label>
@@ -91,16 +129,10 @@
         </section>
 
         <section class="bloc">
-          <h3>📅 Évènement</h3>
+          <h3>Évènement</h3>
           <div class="champs">
-            <label>Type
-              <select name="type">
-                <option value="mariage">Mariage</option>
-                <option value="bapteme">Baptême</option>
-                <option value="autre">Autre</option>
-              </select>
-            </label>
-            <label class="si-autre">Précisez (anniversaire, deuil…)<input name="typePrecision" autocomplete="off"></label>
+            <label>Type<select name="type" id="choix-type"></select></label>
+            <label class="si-autre">Précision (facultatif)<input name="typePrecision" autocomplete="off" placeholder="Ex. : 50 ans, inauguration…"></label>
             <label>Date *<input name="date" type="date" required></label>
             <label>Heure<input name="heure" type="time"></label>
             <label class="large">Lieu<input name="lieu" autocomplete="off" placeholder="Salle, église, adresse…"></label>
@@ -113,7 +145,7 @@
         </section>
 
         <section class="bloc">
-          <h3>💐 Demande</h3>
+          <h3>Demande</h3>
           <div class="champs">
             <label class="large">Description<textarea name="description" rows="3" placeholder="Ce que le client souhaite, l'ambiance…"></textarea></label>
             <label>Fleurs souhaitées<input name="fleurs" autocomplete="off" placeholder="Pivoines, roses, eucalyptus…"></label>
@@ -122,35 +154,36 @@
           <div class="compositions">
             <div class="compositions-titre">Compositions</div>
             <div id="liste-compositions"></div>
-            <button type="button" class="btn btn-contour btn-petit" id="ajouter-composition">+ Ajouter une composition</button>
+            <button type="button" class="btn btn-contour btn-petit" id="ajouter-composition">Ajouter une composition</button>
             <datalist id="suggestions-compositions">
               <option value="Bouquet de mariée"><option value="Boutonnière"><option value="Bouquet de demoiselle d'honneur">
               <option value="Centre de table"><option value="Arche"><option value="Couronne de fleurs">
               <option value="Décoration d'église"><option value="Décoration de voiture"><option value="Composition d'entrée">
-              <option value="Bracelet de fleurs"><option value="Gerbe"><option value="Coussin">
+              <option value="Bracelet de fleurs"><option value="Gerbe"><option value="Coussin"><option value="Couronne mortuaire">
+              <option value="Dessus de cercueil"><option value="Raquette"><option value="Bouquet rond">
             </datalist>
           </div>
         </section>
 
         <section class="bloc">
-          <h3>📷 Photos d'inspiration du client</h3>
+          <h3>Photos d'inspiration du client</h3>
           <div class="galerie" id="galerie-inspirations"></div>
-          <label class="btn btn-contour btn-petit ajout-photo">+ Ajouter des photos
+          <label class="btn btn-contour btn-petit ajout-photo">Ajouter des photos
             <input type="file" accept="image/*" multiple data-galerie="inspirations" hidden>
           </label>
         </section>
 
         <section class="bloc bloc-moodboard">
-          <h3>🌸 Mon moodboard</h3>
+          <h3>Mon moodboard</h3>
           <div class="galerie galerie-grande" id="galerie-moodboard"></div>
-          <label class="btn btn-contour btn-petit ajout-photo">+ Ajouter des images
+          <label class="btn btn-contour btn-petit ajout-photo">Ajouter des images
             <input type="file" accept="image/*" multiple data-galerie="moodboard" hidden>
           </label>
           <label class="large">Notes du moodboard<textarea name="moodboardNotes" rows="3" placeholder="Idées, variantes, remarques pour le client…"></textarea></label>
         </section>
 
         <section class="bloc">
-          <h3>✅ Suivi</h3>
+          <h3>Suivi</h3>
           <div class="champs">
             <label>Statut
               <select name="statut">
@@ -177,31 +210,34 @@
     </form>
   </div>
 
-  <!-- Sauvegarde et tablette -->
+  <!-- Sauvegarde -->
   <div class="fond" id="fenetre-sauvegarde" hidden>
     <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-sauvegarde">
       <div class="fenetre-entete">
-        <h2 id="titre-sauvegarde">Sauvegarde</h2>
-        <button class="fermer" data-fermer aria-label="Fermer">×</button>
+        <div>
+          <h2 id="titre-sauvegarde">Sauvegarde</h2>
+          <p class="sous-titre" id="etat-sauvegarde"></p>
+        </div>
+        <button class="fermer" data-fermer aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
       <div class="fenetre-corps">
         <section class="bloc">
-          <h3>💾 Faire une sauvegarde</h3>
-          <p>Télécharge un fichier contenant toutes vos commandes et toutes les photos. Rangez-le sur une clé USB ou dans OneDrive.</p>
+          <h3>Pourquoi sauvegarder ?</h3>
+          <p>Vos commandes et vos photos sont enregistrées dans votre navigateur, sur cet ordinateur. Elles restent quand vous fermez tout.
+          Mais si l'ordinateur tombe en panne, ou si l'historique du navigateur est effacé, elles seraient perdues.
+          La sauvegarde est une copie de secours, à ranger sur une clé USB ou dans OneDrive.</p>
+        </section>
+        <section class="bloc">
+          <h3>Faire une sauvegarde</h3>
+          <p>Télécharge un fichier contenant toutes vos commandes et toutes les photos (dans le dossier Téléchargements).</p>
           <button type="button" class="btn btn-plein" id="btn-exporter">Télécharger la sauvegarde</button>
         </section>
         <section class="bloc">
-          <h3>♻️ Restaurer une sauvegarde</h3>
-          <p>Remplace toutes les commandes actuelles par celles du fichier choisi. À utiliser par exemple après un changement d’ordinateur.</p>
-          <label class="btn btn-contour">Choisir un fichier de sauvegarde…
+          <h3>Restaurer une sauvegarde</h3>
+          <p>Remplace toutes les commandes actuelles par celles du fichier choisi, par exemple après un changement d'ordinateur.</p>
+          <label class="btn btn-contour">Choisir un fichier de sauvegarde
             <input type="file" accept=".json,application/json" id="fichier-import" hidden>
           </label>
-        </section>
-        <section class="bloc">
-          <h3>ℹ️ Où sont mes données ?</h3>
-          <p>Vos commandes et vos photos sont enregistrées dans votre navigateur, sur cet ordinateur. Elles restent quand vous fermez tout.
-          Attention : si vous effacez les « données de navigation » ou les « cookies et données de site » du navigateur, elles seraient effacées.
-          C'est pour cela qu'il faut faire une sauvegarde régulièrement.</p>
         </section>
       </div>
     </div>
@@ -209,17 +245,17 @@
 
   <!-- Agrandissement d'image -->
   <div class="visionneuse" id="visionneuse" hidden>
-    <button class="fermer fermer-visionneuse" aria-label="Fermer">×</button>
-    <button class="fleche fleche-gauche" aria-label="Image précédente">‹</button>
+    <button class="fermer fermer-visionneuse" aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <button class="fleche fleche-gauche" aria-label="Image précédente"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <img alt="Image agrandie">
-    <button class="fleche fleche-droite" aria-label="Image suivante">›</button>
+    <button class="fleche fleche-droite" aria-label="Image suivante"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <div class="compteur"></div>
   </div>
 
   <div class="message-flottant" id="message-flottant" hidden></div>
 
-  <script src="fichiers/exemples.js"></script>
-  <script src="fichiers/stockage.js"></script>
-  <script src="fichiers/app.js"></script>
+  <script src="exemples.js"></script>
+  <script src="stockage.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

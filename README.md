@@ -36,13 +36,13 @@ Si le fichier s'ouvre avec un autre navigateur : clic droit sur le fichier → *
 Les commandes et les photos sont enregistrées **dans le navigateur, sur cet ordinateur**. Elles restent quand vous
 fermez le calendrier, le navigateur ou l'ordinateur.
 
-⚠️ Elles seraient effacées si vous videz les « données de navigation » / « cookies et données de site » du navigateur,
+Elles seraient effacées si vous videz les « données de navigation » / « cookies et données de site » du navigateur,
 ou si vous changez d'ordinateur. **C'est pour cela qu'il faut faire des sauvegardes.** Le calendrier vous le rappelle
 par un bandeau jaune si votre dernière sauvegarde a plus de 7 jours.
 
 ### 4. Faire une sauvegarde (chaque semaine par exemple)
 
-1. Cliquez sur **💾 Sauvegarde** puis **Télécharger la sauvegarde**.
+1. Cliquez sur **Sauvegarde** puis **Télécharger la sauvegarde**.
 2. Un fichier `sauvegarde-calendrier-AAAA-MM-JJ.json` arrive dans vos **Téléchargements** :
    il contient toutes les commandes **et toutes les photos**.
 3. Copiez-le sur une clé USB ou dans OneDrive.
@@ -50,7 +50,7 @@ par un bandeau jaune si votre dernière sauvegarde a plus de 7 jours.
 ### 5. Restaurer une sauvegarde (après un problème ou un changement d'ordinateur)
 
 1. Installez le calendrier (étape 1) si besoin, et ouvrez-le.
-2. Cliquez sur **💾 Sauvegarde** → **Choisir un fichier de sauvegarde…** → choisissez votre dernier fichier de sauvegarde.
+2. Cliquez sur **Sauvegarde** → **Choisir un fichier de sauvegarde…** → choisissez votre dernier fichier de sauvegarde.
 3. Toutes les commandes et les photos reviennent. (Les commandes présentes avant sont remplacées.)
 
 ### 6. Installer une nouvelle version
@@ -64,7 +64,9 @@ une sauvegarde avant.
 ## Fonctionnement
 
 - **Calendrier** : vue du mois, semaine du lundi au dimanche, flèches ‹ › pour changer de mois, bouton « Aujourd'hui ».
-  Couleurs : rose = mariage, bleu = baptême, vert = autre. Une commande annulée apparaît barrée.
+  Huit types d'évènements (mariage, fiançailles, baptême, communion, anniversaire, deuil, entreprise, autre),
+  chacun avec sa couleur. Une commande annulée apparaît barrée. Le calendrier tient sur un seul écran : si un jour
+  a trop de commandes, cliquez sur « + N autres » pour les voir toutes.
 - **Nouvelle commande** : cliquez sur un jour, ou sur « + Nouvelle commande ».
 - **Fiche** : cliquez sur une commande. Cliquez sur une photo pour l'agrandir (flèches pour passer à la suivante).
 - **Commandes du mois** : s'affiche quand vous arrivez sur un mois qui a des commandes, et à tout moment avec le bouton.
@@ -76,5 +78,6 @@ une sauvegarde avant.
 - `Calendrier Arrose.html` : l'application complète, autonome (styles, code, logo et exemples inclus).
   **Ne pas modifier à la main** : ce fichier est fabriqué par `node assembler.js` à partir du dossier `sources/`.
 - `sources/` : `page.html`, `style.css`, `app.js`, `stockage.js` (enregistrement dans le navigateur avec IndexedDB),
-  `exemples.js` (commandes d'exemple installées au tout premier lancement) et `logo.png`.
+  `exemples.js` (commandes d'exemple installées au tout premier lancement) et `polices/` (Jost, Cormorant Garamond,
+  Caveat, sous licence SIL Open Font License).
 - Aucune dépendance, aucun serveur, aucune donnée envoyée sur Internet.

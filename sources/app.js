@@ -1,7 +1,10 @@
 'use strict';
 /* Calendrier des commandes – Arrosé, La cave fleurie */
 
-const TYPES = { mariage: 'Mariage', bapteme: 'Baptême', autre: 'Autre' };
+const TYPES = {
+  mariage: 'Mariage', fiancailles: 'Fiançailles', bapteme: 'Baptême', communion: 'Communion',
+  anniversaire: 'Anniversaire', deuil: 'Deuil', entreprise: 'Entreprise', autre: 'Autre',
+};
 const STATUTS = { devis: 'Devis', confirmee: 'Confirmée', preparation: 'En préparation', livree: 'Livrée', annulee: 'Annulée' };
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
@@ -26,7 +29,12 @@ function echapper(t) {
   return String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function nomClient(c) { return [c.prenom, c.nom].filter(Boolean).join(' ') || 'Sans nom'; }
-function libelleType(c) { return c.type === 'autre' && c.typePrecision ? c.typePrecision : TYPES[c.type] || 'Autre'; }
+function typeDe(c) { return TYPES[c.type] ? c.type : 'autre'; }
+function libelleType(c) {
+  const p = (c.typePrecision || '').trim();
+  if (!p) return TYPES[typeDe(c)];
+  return typeDe(c) === 'autre' ? p : `${TYPES[typeDe(c)]} · ${p}`;
+}
 function dateLongue(cle) {
   const d = dateDepuisCle(cle);
   return `${JOURS[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]} ${d.getFullYear()}`;
@@ -82,15 +90,34 @@ function afficherCalendrier() {
     const classes = ['jour'];
     if (d.getMonth() !== premier.getMonth()) classes.push('hors-mois');
     if (cle === aujourdhui) classes.push('aujourdhui');
-    if (i % 7 >= 5) classes.push('weekend');
     const puces = (parJour[cle] || []).map((c) => `
-      <button type="button" class="puce type-${echapper(c.type)}${c.statut === 'annulee' ? ' annulee' : ''}" data-id="${echapper(c.id)}"
-        title="${echapper(nomClient(c) + ' – ' + libelleType(c) + ' – ' + (STATUTS[c.statut] || ''))}">
-        ${c.heure ? `<span class="heure">${echapper(c.heure)}</span>` : ''}<strong>${echapper(nomClient(c))}</strong><span class="type-texte"> · ${echapper(libelleType(c))}</span>
-      </button>`).join('');
-    html += `<div class="${classes.join(' ')}" data-date="${cle}"><div class="numero"><span>${d.getDate()}</span></div>${puces}</div>`;
+      <button type="button" class="puce t-${typeDe(c)}${c.statut === 'annulee' ? ' annulee' : ''}" data-id="${echapper(c.id)}"
+        title="${echapper(nomClient(c) + ' – ' + libelleType(c) + ' – ' + (STATUTS[c.statut] || ''))}">${c.heure ? `<span class="heure">${echapper(c.heure)}</span>` : ''}<strong>${echapper(nomClient(c))}</strong><span class="type-texte"> · ${echapper(libelleType(c))}</span></button>`).join('');
+    html += `<div class="${classes.join(' ')}" data-date="${cle}">
+      <div class="numero"><b>${d.getDate()}</b><span class="ajout" aria-hidden="true">+</span></div>
+      <div class="puces">${puces}<button type="button" class="plus" hidden></button></div>
+    </div>`;
   }
+  grille.style.setProperty('--semaines', nbCases / 7);
   grille.innerHTML = html;
+  ajusterDebordements();
+}
+
+/* Quand un jour a trop de commandes pour sa case, on affiche « + N autres ». */
+function ajusterDebordements() {
+  for (const zone of $$('#grille .puces')) {
+    const puces = $$('.puce', zone);
+    const plus = $('.plus', zone);
+    puces.forEach((p) => { p.hidden = false; });
+    plus.hidden = true;
+    if (zone.scrollHeight <= zone.clientHeight + 1) continue;
+    plus.hidden = false;
+    let visibles = puces.length;
+    while (visibles > 0 && zone.scrollHeight > zone.clientHeight + 1) {
+      puces[--visibles].hidden = true;
+      plus.textContent = `+ ${puces.length - visibles} autre${puces.length - visibles > 1 ? 's' : ''}`;
+    }
+  }
 }
 
 function allerAuMois(d, { alerte = true } = {}) {
@@ -101,24 +128,36 @@ function allerAuMois(d, { alerte = true } = {}) {
 
 /* ---------- Alerte mensuelle ---------- */
 
-function afficherAlerteMois(meme_si_vide) {
-  const liste = commandesDuMois(moisAffiche);
-  const fenetre = $('#fenetre-mois');
-  const nomMois = `${MOIS[moisAffiche.getMonth()]} ${moisAffiche.getFullYear()}`;
-  if (!liste.length && !meme_si_vide) { fenetre.hidden = true; return; }
-  $('#titre-alerte').textContent = `Commandes de ${nomMois}`;
-  const actives = liste.filter((c) => c.statut !== 'annulee').length;
-  $('#resume-alerte').textContent = liste.length
-    ? `${liste.length} commande${liste.length > 1 ? 's' : ''} ce mois-ci${actives !== liste.length ? ` (dont ${liste.length - actives} annulée${liste.length - actives > 1 ? 's' : ''})` : ''}. Cliquez sur une ligne pour ouvrir la fiche.`
-    : 'Aucune commande ce mois-ci.';
+function afficherListe(titre, resume, liste, dateJour) {
+  $('#titre-alerte').textContent = titre;
+  $('#resume-alerte').textContent = resume;
   $('#liste-alerte').innerHTML = liste.map((c) => `
     <tr data-id="${echapper(c.id)}" tabindex="0">
       <td>${echapper(dateCourte(c.date))}${c.heure ? `<br><small>${echapper(c.heure)}</small>` : ''}</td>
       <td><strong>${echapper(nomClient(c))}</strong></td>
-      <td><span class="type-etiquette"><i class="pastille type-${echapper(c.type)}"></i>${echapper(libelleType(c))}</span></td>
+      <td><span class="type-etiquette t-${typeDe(c)}"><i class="pastille"></i>${echapper(libelleType(c))}</span></td>
       <td><span class="statut statut-${echapper(c.statut)}">${echapper(STATUTS[c.statut] || '')}</span></td>
     </tr>`).join('');
-  fenetre.hidden = false;
+  const bouton = $('#liste-nouvelle');
+  bouton.hidden = !dateJour;
+  bouton.dataset.date = dateJour || '';
+  $('#fenetre-mois').hidden = false;
+}
+
+function afficherAlerteMois(meme_si_vide) {
+  const liste = commandesDuMois(moisAffiche);
+  if (!liste.length && !meme_si_vide) { $('#fenetre-mois').hidden = true; return; }
+  const nomMois = `${MOIS[moisAffiche.getMonth()]} ${moisAffiche.getFullYear()}`;
+  const annulees = liste.filter((c) => c.statut === 'annulee').length;
+  const resume = liste.length
+    ? `${liste.length} commande${liste.length > 1 ? 's' : ''} ce mois-ci${annulees ? ` (dont ${annulees} annulée${annulees > 1 ? 's' : ''})` : ''}. Cliquez sur une ligne pour ouvrir la fiche.`
+    : 'Aucune commande ce mois-ci.';
+  afficherListe(`Commandes de ${nomMois}`, resume, liste);
+}
+
+function afficherJour(cle) {
+  const liste = trier(commandes.filter((c) => c.date === cle));
+  afficherListe(dateLongue(cle).replace(/^./, (l) => l.toUpperCase()), `${liste.length} commandes ce jour-là.`, liste, cle);
 }
 
 /* ---------- Fiche commande ---------- */
@@ -151,7 +190,6 @@ function ouvrirFiche(commande) {
   $('#fiche-supprimer').hidden = !brouillon.id;
   afficherCompositions();
   afficherGaleries();
-  majAutre();
   majReste();
   $('#fenetre-mois').hidden = true;
   $('#fenetre-fiche').hidden = false;
@@ -173,7 +211,6 @@ function lireFormulaire() {
   c.compositions = $$('.ligne-composition', f)
     .map((l) => ({ nom: l.querySelector('[data-nom]').value.trim(), quantite: l.querySelector('[data-quantite]').value.trim() }))
     .filter((x) => x.nom || x.quantite);
-  if (c.type !== 'autre') c.typePrecision = '';
   return c;
 }
 
@@ -187,9 +224,6 @@ function fermerFiche(forcer) {
   brouillon = null;
 }
 
-function majAutre() {
-  $('.si-autre').hidden = formulaire().elements.type.value !== 'autre';
-}
 
 function majReste() {
   const f = formulaire();
@@ -210,7 +244,7 @@ function ajouterLigneComposition(comp = { nom: '', quantite: '' }) {
   ligne.innerHTML = `
     <input data-nom list="suggestions-compositions" placeholder="Bouquet, centre de table, arche…" aria-label="Composition">
     <input data-quantite type="number" min="0" step="1" inputmode="numeric" placeholder="Qté" aria-label="Quantité">
-    <button type="button" aria-label="Retirer cette composition" title="Retirer">×</button>`;
+    <button type="button" aria-label="Retirer cette composition" title="Retirer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
   ligne.querySelector('[data-nom]').value = comp.nom || '';
   ligne.querySelector('[data-quantite]').value = comp.quantite || '';
   ligne.querySelector('button').onclick = () => ligne.remove();
@@ -224,7 +258,7 @@ function afficherGaleries() {
     conteneur.innerHTML = brouillon[galerie].map((nom, i) => `
       <div class="vignette">
         <img src="${Stockage.urlImage(nom)}" alt="" loading="lazy" data-galerie="${galerie}" data-index="${i}">
-        <button type="button" class="retirer" data-galerie="${galerie}" data-index="${i}" title="Retirer cette image" aria-label="Retirer cette image">×</button>
+        <button type="button" class="retirer" data-galerie="${galerie}" data-index="${i}" title="Retirer cette image" aria-label="Retirer cette image"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>`).join('');
   }
 }
@@ -296,7 +330,7 @@ async function enregistrerFiche(ev) {
     await chargerCommandes();
     fermerFiche(true);
     allerAuMois(dateDepuisCle(c.date), { alerte: cleMois(dateDepuisCle(c.date)) !== cleMois(moisAffiche) });
-    messageFlottant('Commande enregistrée ✓');
+    messageFlottant('Commande enregistrée');
   } catch (e) {
     alert(e.message);
   } finally {
@@ -353,7 +387,7 @@ function rechercher() {
   boite.innerHTML = trouves.length
     ? trouves.map((c) => `
       <button type="button" class="resultat" data-id="${echapper(c.id)}">
-        <i class="pastille type-${echapper(c.type)}"></i>
+        <i class="pastille t-${typeDe(c)}"></i>
         <span><strong>${echapper(nomClient(c))}</strong> · ${echapper(libelleType(c))}</span>
         <small>${echapper(dateDepuisCle(c.date).toLocaleDateString('fr-FR'))}</small>
       </button>`).join('')
@@ -380,7 +414,7 @@ async function exporter() {
     lien.click();
     lien.remove();
     setTimeout(() => URL.revokeObjectURL(lien.href), 60000);
-    messageFlottant('Sauvegarde téléchargée ✓ (dossier Téléchargements)');
+    messageFlottant('Sauvegarde téléchargée dans le dossier Téléchargements');
     majRappelSauvegarde();
   } catch (e) {
     alert('La sauvegarde a échoué : ' + e.message);
@@ -390,14 +424,15 @@ async function exporter() {
 }
 
 async function majRappelSauvegarde() {
-  const rappel = $('#rappel-sauvegarde');
   const derniere = await Stockage.derniereSauvegarde();
   const jours = derniere ? Math.floor((Date.now() - new Date(derniere).getTime()) / 86400000) : null;
-  if (!commandes.length || (jours !== null && jours < 7)) { rappel.hidden = true; return; }
-  $('#rappel-texte').textContent = jours === null
-    ? 'Vous n’avez encore jamais fait de sauvegarde.'
-    : `Votre dernière sauvegarde date de ${jours} jours.`;
-  rappel.hidden = false;
+  $('#etat-sauvegarde').textContent = derniere
+    ? `Dernière sauvegarde le ${new Date(derniere).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.`
+    : 'Aucune sauvegarde pour le moment.';
+  const besoin = commandes.length > 0 && (jours === null || jours >= 7);
+  $('#rappel-sauvegarde').hidden = !besoin;
+  $('#point-sauvegarde').hidden = !besoin;
+  $('#rappel-sauvegarde').textContent = jours === null ? 'Aucune sauvegarde : en faire une' : `Dernière sauvegarde il y a ${jours} jours`;
 }
 
 async function importer(fichier) {
@@ -408,7 +443,7 @@ async function importer(fichier) {
     await chargerCommandes();
     $('#fenetre-sauvegarde').hidden = true;
     allerAuMois(moisAffiche, { alerte: false });
-    messageFlottant(`Sauvegarde restaurée : ${nombre} commande${nombre > 1 ? 's' : ''} ✓`);
+    messageFlottant(`Sauvegarde restaurée : ${nombre} commande${nombre > 1 ? 's' : ''}`);
   } catch (e) {
     alert(e.message);
   }
@@ -416,7 +451,13 @@ async function importer(fichier) {
 
 /* ---------- Évènements ---------- */
 
+function remplirTypes() {
+  $('#choix-type').innerHTML = Object.entries(TYPES).map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+  $('#legende').innerHTML = Object.entries(TYPES).map(([v, l]) => `<span class="t-${v}"><i class="pastille"></i>${l}</span>`).join('');
+}
+
 function brancher() {
+  remplirTypes();
   $('#mois-precedent').onclick = () => allerAuMois(new Date(moisAffiche.getFullYear(), moisAffiche.getMonth() - 1, 1));
   $('#mois-suivant').onclick = () => allerAuMois(new Date(moisAffiche.getFullYear(), moisAffiche.getMonth() + 1, 1));
   $('#btn-aujourdhui').onclick = () => {
@@ -431,11 +472,16 @@ function brancher() {
   };
   $('#btn-reglages').onclick = ouvrirSauvegarde;
   $('#btn-exporter').onclick = exporter;
-  $('#rappel-sauvegarde button').onclick = exporter;
+  $('#rappel-sauvegarde').onclick = ouvrirSauvegarde;
+  $('#liste-nouvelle').onclick = () => ouvrirFiche(commandeVide($('#liste-nouvelle').dataset.date));
+  let minuteurTaille;
+  window.addEventListener('resize', () => { clearTimeout(minuteurTaille); minuteurTaille = setTimeout(ajusterDebordements, 120); });
 
   $('#grille').addEventListener('click', (e) => {
     const puce = e.target.closest('.puce');
     if (puce) return ouvrirFicheParId(puce.dataset.id);
+    const plus = e.target.closest('.plus');
+    if (plus) return afficherJour(plus.closest('.jour').dataset.date);
     const jour = e.target.closest('.jour');
     if (jour) ouvrirFiche(commandeVide(jour.dataset.date));
   });
@@ -461,7 +507,6 @@ function brancher() {
   $('#fiche-annuler').onclick = () => fermerFiche(false);
   $('#fiche-supprimer').onclick = supprimerFiche;
   $('#fenetre-fiche').addEventListener('mousedown', (e) => { if (e.target.id === 'fenetre-fiche') fermerFiche(false); });
-  f.elements.type.addEventListener('change', majAutre);
   f.elements.prix.addEventListener('input', majReste);
   f.elements.acompte.addEventListener('input', majReste);
   $('#ajouter-composition').onclick = () => ajouterLigneComposition().querySelector('input').focus();
