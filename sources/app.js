@@ -473,7 +473,7 @@ async function majRappelSauvegarde() {
   $('#etat-sauvegarde').textContent = derniere
     ? `Dernière sauvegarde le ${new Date(derniere).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.`
     : 'Aucune sauvegarde pour le moment.';
-  const besoin = commandes.length > 0 && (jours === null || jours >= 7);
+  const besoin = commandes.length > 0 && (jours === null || jours >= 14);
   $('#rappel-sauvegarde').hidden = !besoin;
   $('#point-sauvegarde').hidden = !besoin;
   $('#point-menu').hidden = !besoin;
@@ -936,19 +936,81 @@ async function mettreAJourExemples() {
   if (modifie) await chargerCommandes();
 }
 
-async function demarrer() {
-  brancher();
+/* ---------- Dossier des données ---------- */
+
+function majInfoDossier() {
+  const enDossier = Stockage.mode() === 'dossier';
+  $('#info-dossier').innerHTML = enDossier
+    ? `Vos commandes et vos photos sont enregistrées en fichiers sur cet ordinateur, dans le dossier <strong>${echapper(Stockage.nomDossier())}</strong>.`
+    : 'Vos commandes et vos photos sont enregistrées dans ce navigateur. Pour les enregistrer dans un dossier, ouvrez le calendrier avec Microsoft Edge ou Google Chrome.';
+  $('#changer-dossier').hidden = !enDossier;
+}
+
+function afficherEcranDossier(etat, erreur) {
+  const reconnecter = etat === 'reconnecter';
+  $('#ecran-titre').textContent = reconnecter ? 'Bonjour !' : 'Où enregistrer vos commandes ?';
+  $('#ecran-texte').innerHTML = reconnecter
+    ? `<p>Pour votre sécurité, le navigateur demande votre accord avant d'ouvrir le dossier <strong>${echapper(Stockage.nomDossierChoisi())}</strong> où sont enregistrées vos commandes.</p>
+       <p>Cliquez sur « Ouvrir mes commandes », puis sur <strong>Autoriser</strong>. Si le navigateur propose « Autoriser à chaque visite », choisissez-le : vous n'aurez plus à le faire.</p>`
+    : `<p>Le calendrier enregistre vos commandes et vos photos en fichiers, dans un dossier de votre ordinateur. Le plus simple est de choisir le dossier où se trouve ce fichier <code>Calendrier Arrose</code>.</p>
+       <ol><li>Cliquez sur « Choisir le dossier ».</li>
+       <li>Sélectionnez le dossier du calendrier, puis cliquez sur <strong>Sélectionner le dossier</strong>.</li>
+       <li>Acceptez quand le navigateur demande l'autorisation de modifier les fichiers.</li></ol>
+       <p>Un dossier <code>donnees-calendrier</code> y sera créé. Les commandes déjà saisies y seront recopiées.</p>`;
+  $('#ecran-principal').textContent = reconnecter ? 'Ouvrir mes commandes' : 'Choisir le dossier';
+  $('#ecran-principal').dataset.nouveau = reconnecter ? '' : '1';
+  $('#ecran-autre').hidden = !reconnecter;
+  $('#ecran-erreur').hidden = !erreur;
+  $('#ecran-erreur').textContent = erreur || '';
+  $('#ecran-dossier').hidden = false;
+}
+
+async function connecterDossier(nouveau) {
   try {
-    await Stockage.demarrer();
-    await chargerTypes();
-    await chargerCommandes();
-    await mettreAJourExemples();
-    await Stockage.nettoyerImages(commandes);
+    await Stockage.connecter(nouveau);
+    await lancerCalendrier();
   } catch (e) {
-    alert(e.message);
+    if (e.name === 'AbortError') return; // fenêtre de choix fermée sans choisir
+    afficherEcranDossier(Stockage.nomDossierChoisi() ? 'reconnecter' : 'choisir', e.message);
   }
+}
+
+async function changerDossier() {
+  if (!confirm('Choisir un autre dossier pour les données ?\nSi ce dossier est vide, vos commandes actuelles y seront copiées. S’il contient déjà des données du calendrier, ce sont elles qui seront ouvertes.')) return;
+  try {
+    await Stockage.connecter(true);
+    await lancerCalendrier();
+    messageFlottant('Dossier des données changé');
+  } catch (e) {
+    if (e.name !== 'AbortError') alert(e.message);
+  }
+}
+
+async function lancerCalendrier() {
+  await chargerTypes();
+  await chargerCommandes();
+  await mettreAJourExemples();
+  await Stockage.nettoyerImages();
+  $('#ecran-dossier').hidden = true;
   allerAuMois(new Date());
   majRappelSauvegarde();
+  majInfoDossier();
+}
+
+async function demarrer() {
+  brancher();
+  $('#ecran-principal').onclick = () => connecterDossier(!!$('#ecran-principal').dataset.nouveau);
+  $('#ecran-autre').onclick = () => connecterDossier(true);
+  $('#changer-dossier').onclick = changerDossier;
+  let etat;
+  try {
+    etat = await Stockage.demarrer();
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
+  if (etat === 'pret') await lancerCalendrier();
+  else afficherEcranDossier(etat);
 }
 
 demarrer();

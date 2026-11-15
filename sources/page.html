@@ -279,10 +279,14 @@
       </div>
       <div class="fenetre-corps">
         <section class="bloc">
+          <h3>Où sont mes données ?</h3>
+          <p id="info-dossier"></p>
+          <button type="button" class="btn btn-contour" id="changer-dossier">Changer de dossier</button>
+        </section>
+        <section class="bloc">
           <h3>Pourquoi sauvegarder ?</h3>
-          <p>Vos commandes et vos photos sont enregistrées dans votre navigateur, sur cet ordinateur. Elles restent quand vous fermez tout.
-          Mais si l'ordinateur tombe en panne, ou si l'historique du navigateur est effacé, elles seraient perdues.
-          La sauvegarde est une copie de secours, à ranger sur une clé USB ou dans OneDrive.</p>
+          <p>Si l'ordinateur tombe en panne ou est perdu, les données qu'il contient le sont aussi.
+          La sauvegarde est une copie de secours en un seul fichier, à ranger sur une clé USB ou dans OneDrive.</p>
         </section>
         <section class="bloc">
           <h3>Faire une sauvegarde</h3>
@@ -355,6 +359,22 @@
     <img alt="Image agrandie">
     <button class="fleche fleche-droite" aria-label="Image suivante"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <div class="compteur"></div>
+  </div>
+
+  <!-- Choix du dossier des données (au lancement) -->
+  <div class="ecran-dossier" id="ecran-dossier" hidden>
+    <div class="carte-dossier">
+      <div class="marque marque-sombre" aria-hidden="true">
+        <div class="marque-texte"><span class="marque-nom">Arrosé</span><span class="marque-sous">La cave fleurie</span></div>
+      </div>
+      <h2 id="ecran-titre">Où enregistrer vos commandes ?</h2>
+      <div id="ecran-texte"></div>
+      <div class="ecran-actions">
+        <button type="button" class="btn btn-plein" id="ecran-principal">Choisir le dossier</button>
+        <button type="button" class="btn btn-contour" id="ecran-autre" hidden>Choisir un autre dossier</button>
+      </div>
+      <p class="ecran-erreur" id="ecran-erreur" hidden></p>
+    </div>
   </div>
 
   <div class="message-flottant" id="message-flottant" hidden></div>

@@ -414,3 +414,20 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
   .btn-menu span:not(.point-alerte) { display: none; }
   .ligne-fleur { grid-template-columns: 1fr 1fr; }
 }
+
+/* ---------- Choix du dossier des données ---------- */
+.ecran-dossier {
+  position: fixed; inset: 0; z-index: 90; background: var(--creme);
+  display: flex; align-items: center; justify-content: center; padding: 24px; overflow-y: auto;
+}
+.carte-dossier {
+  background: var(--papier); border: 1px solid var(--trait); border-radius: 14px; box-shadow: var(--ombre);
+  max-width: 560px; width: 100%; padding: 32px 36px;
+}
+.marque-sombre { color: var(--framboise); margin-bottom: 18px; }
+.carte-dossier h2 { font-family: var(--serif); font-size: 30px; color: var(--framboise); margin-bottom: 12px; }
+.carte-dossier p, .carte-dossier li { font-size: 15px; line-height: 1.55; }
+.carte-dossier ol { padding-left: 20px; margin: 10px 0 0; }
+.carte-dossier code { font-family: inherit; background: var(--framboise-pale); color: var(--framboise); padding: 1px 6px; border-radius: 4px; font-size: 14px; }
+.ecran-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+.ecran-erreur { color: #A3262B; font-size: 14px; margin-top: 14px; }
