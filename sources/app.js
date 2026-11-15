@@ -942,8 +942,11 @@ function majInfoDossier() {
   const enDossier = Stockage.mode() === 'dossier';
   $('#info-dossier').innerHTML = enDossier
     ? `Vos commandes et vos photos sont enregistrées en fichiers sur cet ordinateur, dans le dossier <strong>${echapper(Stockage.nomDossier())}</strong>.`
-    : 'Vos commandes et vos photos sont enregistrées dans ce navigateur. Pour les enregistrer dans un dossier, ouvrez le calendrier avec Microsoft Edge ou Google Chrome.';
-  $('#changer-dossier').hidden = !enDossier;
+    : Stockage.dossierPossible()
+      ? 'Vos commandes et vos photos sont enregistrées dans ce navigateur. Vous pouvez les enregistrer plutôt en fichiers, dans un dossier de votre ordinateur : elles y seront recopiées.'
+      : 'Vos commandes et vos photos sont enregistrées dans ce navigateur. Pour les enregistrer dans un dossier, ouvrez le calendrier avec Microsoft Edge ou Google Chrome.';
+  $('#changer-dossier').hidden = !Stockage.dossierPossible();
+  $('#changer-dossier').textContent = enDossier ? 'Changer de dossier' : 'Choisir un dossier';
 }
 
 function afficherEcranDossier(etat, erreur) {
@@ -970,17 +973,19 @@ async function connecterDossier(nouveau) {
     await Stockage.connecter(nouveau);
     await lancerCalendrier();
   } catch (e) {
-    if (e.name === 'AbortError') return; // fenêtre de choix fermée sans choisir
-    afficherEcranDossier(Stockage.nomDossierChoisi() ? 'reconnecter' : 'choisir', e.message);
+    const msg = e.name === 'AbortError'
+      ? 'Aucun dossier n’a été ouvert. Après « Sélectionner le dossier », le navigateur demande s’il peut modifier les fichiers : cliquez sur « Modifier les fichiers » (et non sur « Annuler »). Si cela ne fonctionne toujours pas, cliquez sur « Continuer sans dossier » ci-dessous.'
+      : e.message;
+    afficherEcranDossier(Stockage.nomDossierChoisi() ? 'reconnecter' : 'choisir', msg);
   }
 }
 
 async function changerDossier() {
-  if (!confirm('Choisir un autre dossier pour les données ?\nSi ce dossier est vide, vos commandes actuelles y seront copiées. S’il contient déjà des données du calendrier, ce sont elles qui seront ouvertes.')) return;
+  if (Stockage.mode() === 'dossier' && !confirm('Choisir un autre dossier pour les données ?\nSi ce dossier est vide, vos commandes actuelles y seront copiées. S’il contient déjà des données du calendrier, ce sont elles qui seront ouvertes.')) return;
   try {
     await Stockage.connecter(true);
     await lancerCalendrier();
-    messageFlottant('Dossier des données changé');
+    messageFlottant('Commandes enregistrées dans le dossier ' + Stockage.nomDossier());
   } catch (e) {
     if (e.name !== 'AbortError') alert(e.message);
   }
@@ -1001,6 +1006,9 @@ async function demarrer() {
   brancher();
   $('#ecran-principal').onclick = () => connecterDossier(!!$('#ecran-principal').dataset.nouveau);
   $('#ecran-autre').onclick = () => connecterDossier(true);
+  $('#ecran-navigateur').onclick = async () => {
+    try { await Stockage.utiliserNavigateur(); await lancerCalendrier(); } catch (e) { alert(e.message); }
+  };
   $('#changer-dossier').onclick = changerDossier;
   let etat;
   try {

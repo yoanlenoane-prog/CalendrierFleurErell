@@ -446,6 +446,9 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
 .carte-dossier code { font-family: inherit; background: var(--framboise-pale); color: var(--framboise); padding: 1px 6px; border-radius: 4px; font-size: 14px; }
 .ecran-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
 .ecran-erreur { color: #A3262B; font-size: 14px; margin-top: 14px; }
+.carte-dossier .ecran-sans-dossier { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--trait); font-size: 13.5px; color: var(--texte-doux); }
+.lien { background: none; border: 0; padding: 0; font: inherit; color: var(--framboise); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.lien:hover { color: var(--framboise-fonce); }
 
 </style>
 </head>
@@ -815,6 +818,7 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
         <button type="button" class="btn btn-contour" id="ecran-autre" hidden>Choisir un autre dossier</button>
       </div>
       <p class="ecran-erreur" id="ecran-erreur" hidden></p>
+      <p class="ecran-sans-dossier">Le choix du dossier ne fonctionne pas ? <button type="button" class="lien" id="ecran-navigateur">Continuer sans dossier</button> : les commandes seront enregistrées dans le navigateur, comme une page internet. Vous pourrez choisir un dossier plus tard depuis Menu › Sauvegarde.</p>
     </div>
   </div>
 
@@ -1059,21 +1063,47 @@ const Stockage = (() => {
     }
   }
 
+  /* Mode « navigateur » : tout reste dans IndexedDB (navigateur sans accès aux dossiers, ou choix de la fleuriste). */
+  async function ouvrirNavigateur() {
+    mode = 'navigateur';
+    try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* rien */ }
+    await chargerDepuisNavigateur();
+    if (!reglages.initialise) {
+      installerExemples();
+      reglages.initialise = true;
+      for (const [nom, im] of images) await idbEcrire('images', im.blob, nom);
+      await persisterCommandes();
+      await persisterReglages();
+    }
+  }
+
+  /* Traduit les erreurs du navigateur en explications simples (avec le nom technique entre parenthèses). */
+  function erreurClaire(e) {
+    if (e && e.name === 'AbortError') return e;
+    const nom = (e && e.name) || 'Erreur';
+    let texte;
+    if (nom === 'SecurityError') {
+      texte = 'Le navigateur refuse d’ouvrir ce dossier depuis ce fichier. Vérifiez que le calendrier est ouvert avec Microsoft Edge ou Google Chrome, en double-cliquant sur le fichier (et non depuis GitHub).';
+    } else if (nom === 'NotAllowedError') {
+      texte = 'L’autorisation n’a pas été donnée. Cliquez à nouveau et choisissez « Modifier les fichiers » ou « Autoriser ».';
+    } else if (nom === 'NotFoundError') {
+      texte = 'Le dossier est introuvable (il a peut-être été déplacé ou renommé). Choisissez-le à nouveau.';
+    } else if (nom === 'TypeError') {
+      texte = 'Ce dossier ne peut pas être utilisé (dossier système ou protégé). Choisissez un dossier que vous avez créé, par exemple « Calendrier Arrosé » dans Documents.';
+    } else {
+      texte = 'Le dossier n’a pas pu être ouvert. Essayez un autre dossier, ou continuez sans dossier.';
+    }
+    const err = new Error(`${texte} (détail technique : ${nom}${e && e.message ? ' – ' + e.message : ''})`);
+    err.name = nom;
+    return err;
+  }
+
   return {
     /* Renvoie 'pret', 'choisir' (aucun dossier encore choisi) ou 'reconnecter' (autoriser à nouveau l'accès). */
     async demarrer() {
       base = await ouvrirBase();
-      if (typeof window.showDirectoryPicker !== 'function') {
-        mode = 'navigateur';
-        try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* rien */ }
-        await chargerDepuisNavigateur();
-        if (!reglages.initialise) {
-          installerExemples();
-          reglages.initialise = true;
-          for (const [nom, im] of images) await idbEcrire('images', im.blob, nom);
-          await persisterCommandes();
-          await persisterReglages();
-        }
+      if (typeof window.showDirectoryPicker !== 'function' || (await idbLire('reglages', 'modeNavigateur'))) {
+        await ouvrirNavigateur();
         return 'pret';
       }
       poignee = await idbLire('reglages', 'dossier');
@@ -1091,19 +1121,32 @@ const Stockage = (() => {
 
     /* À appeler depuis un clic. nouveau = true pour choisir (ou changer) le dossier. */
     async connecter(nouveau) {
-      if (nouveau || !poignee) {
-        poignee = await window.showDirectoryPicker({ id: 'calendrier-arrose', mode: 'readwrite', startIn: 'documents' });
-      } else if ((await poignee.requestPermission({ mode: 'readwrite' })) !== 'granted') {
-        throw new Error('Le navigateur n’a pas reçu l’autorisation d’ouvrir le dossier. Cliquez à nouveau et choisissez « Autoriser ».');
+      try {
+        let h = poignee;
+        if (nouveau || !h) {
+          h = await window.showDirectoryPicker({ id: 'calendrier-arrose', mode: 'readwrite', startIn: 'documents' });
+        }
+        let etat = await h.queryPermission({ mode: 'readwrite' });
+        if (etat !== 'granted') etat = await h.requestPermission({ mode: 'readwrite' });
+        if (etat !== 'granted') {
+          const e = new Error('permission ' + etat); e.name = 'NotAllowedError'; throw e;
+        }
+        poignee = h;
+        await brancherDossier(h);
+        await idbEcrire('reglages', h, 'dossier');
+        await idbEcrire('reglages', false, 'modeNavigateur');
+      } catch (e) {
+        throw erreurClaire(e);
       }
-      if ((await poignee.queryPermission({ mode: 'readwrite' })) !== 'granted'
-        && (await poignee.requestPermission({ mode: 'readwrite' })) !== 'granted') {
-        throw new Error('Le navigateur n’a pas reçu l’autorisation d’écrire dans ce dossier.');
-      }
-      await brancherDossier(poignee);
-      await idbEcrire('reglages', poignee, 'dossier');
     },
 
+    /* « Continuer sans dossier » : enregistrement dans le navigateur, retenu pour les prochaines ouvertures. */
+    async utiliserNavigateur() {
+      await ouvrirNavigateur();
+      await idbEcrire('reglages', true, 'modeNavigateur');
+    },
+
+    dossierPossible() { return typeof window.showDirectoryPicker === 'function'; },
     mode() { return mode; },
     nomDossier() { return mode === 'dossier' ? `${poignee.name === dossier.name ? '' : poignee.name + ' › '}${dossier.name}` : ''; },
     nomDossierChoisi() { return poignee ? poignee.name : ''; },
@@ -2128,8 +2171,11 @@ function majInfoDossier() {
   const enDossier = Stockage.mode() === 'dossier';
   $('#info-dossier').innerHTML = enDossier
     ? `Vos commandes et vos photos sont enregistrées en fichiers sur cet ordinateur, dans le dossier <strong>${echapper(Stockage.nomDossier())}</strong>.`
-    : 'Vos commandes et vos photos sont enregistrées dans ce navigateur. Pour les enregistrer dans un dossier, ouvrez le calendrier avec Microsoft Edge ou Google Chrome.';
-  $('#changer-dossier').hidden = !enDossier;
+    : Stockage.dossierPossible()
+      ? 'Vos commandes et vos photos sont enregistrées dans ce navigateur. Vous pouvez les enregistrer plutôt en fichiers, dans un dossier de votre ordinateur : elles y seront recopiées.'
+      : 'Vos commandes et vos photos sont enregistrées dans ce navigateur. Pour les enregistrer dans un dossier, ouvrez le calendrier avec Microsoft Edge ou Google Chrome.';
+  $('#changer-dossier').hidden = !Stockage.dossierPossible();
+  $('#changer-dossier').textContent = enDossier ? 'Changer de dossier' : 'Choisir un dossier';
 }
 
 function afficherEcranDossier(etat, erreur) {
@@ -2156,17 +2202,19 @@ async function connecterDossier(nouveau) {
     await Stockage.connecter(nouveau);
     await lancerCalendrier();
   } catch (e) {
-    if (e.name === 'AbortError') return; // fenêtre de choix fermée sans choisir
-    afficherEcranDossier(Stockage.nomDossierChoisi() ? 'reconnecter' : 'choisir', e.message);
+    const msg = e.name === 'AbortError'
+      ? 'Aucun dossier n’a été ouvert. Après « Sélectionner le dossier », le navigateur demande s’il peut modifier les fichiers : cliquez sur « Modifier les fichiers » (et non sur « Annuler »). Si cela ne fonctionne toujours pas, cliquez sur « Continuer sans dossier » ci-dessous.'
+      : e.message;
+    afficherEcranDossier(Stockage.nomDossierChoisi() ? 'reconnecter' : 'choisir', msg);
   }
 }
 
 async function changerDossier() {
-  if (!confirm('Choisir un autre dossier pour les données ?\nSi ce dossier est vide, vos commandes actuelles y seront copiées. S’il contient déjà des données du calendrier, ce sont elles qui seront ouvertes.')) return;
+  if (Stockage.mode() === 'dossier' && !confirm('Choisir un autre dossier pour les données ?\nSi ce dossier est vide, vos commandes actuelles y seront copiées. S’il contient déjà des données du calendrier, ce sont elles qui seront ouvertes.')) return;
   try {
     await Stockage.connecter(true);
     await lancerCalendrier();
-    messageFlottant('Dossier des données changé');
+    messageFlottant('Commandes enregistrées dans le dossier ' + Stockage.nomDossier());
   } catch (e) {
     if (e.name !== 'AbortError') alert(e.message);
   }
@@ -2187,6 +2235,9 @@ async function demarrer() {
   brancher();
   $('#ecran-principal').onclick = () => connecterDossier(!!$('#ecran-principal').dataset.nouveau);
   $('#ecran-autre').onclick = () => connecterDossier(true);
+  $('#ecran-navigateur').onclick = async () => {
+    try { await Stockage.utiliserNavigateur(); await lancerCalendrier(); } catch (e) { alert(e.message); }
+  };
   $('#changer-dossier').onclick = changerDossier;
   let etat;
   try {

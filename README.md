@@ -23,6 +23,12 @@ dans le dossier du calendrier.
    sélectionnez le dossier **Calendrier Arrosé**, cliquez sur **Sélectionner le dossier**, puis acceptez que le navigateur
    **modifie les fichiers**. Un dossier `donnees-calendrier` est créé à côté du fichier.
 
+Si, après avoir cliqué sur « Sélectionner le dossier », vous revenez sur cet écran sans que rien ne se passe :
+le navigateur a sans doute affiché une question « Autoriser le site à modifier les fichiers ? » à laquelle il faut
+répondre **Modifier les fichiers**. Si cela ne fonctionne toujours pas, cliquez sur **Continuer sans dossier** :
+les commandes sont alors enregistrées dans le navigateur, et vous pourrez choisir un dossier plus tard
+(Menu → Sauvegarde → Choisir un dossier).
+
 Astuce : clic droit sur le fichier → **Afficher plus d'options** → **Envoyer vers** → **Bureau (créer un raccourci)**.
 
 ### 2. Ouvrir le calendrier (chaque jour)

@@ -431,3 +431,6 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
 .carte-dossier code { font-family: inherit; background: var(--framboise-pale); color: var(--framboise); padding: 1px 6px; border-radius: 4px; font-size: 14px; }
 .ecran-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
 .ecran-erreur { color: #A3262B; font-size: 14px; margin-top: 14px; }
+.carte-dossier .ecran-sans-dossier { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--trait); font-size: 13.5px; color: var(--texte-doux); }
+.lien { background: none; border: 0; padding: 0; font: inherit; color: var(--framboise); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.lien:hover { color: var(--framboise-fonce); }

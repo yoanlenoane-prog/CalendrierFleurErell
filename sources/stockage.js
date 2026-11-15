@@ -231,21 +231,47 @@ const Stockage = (() => {
     }
   }
 
+  /* Mode « navigateur » : tout reste dans IndexedDB (navigateur sans accès aux dossiers, ou choix de la fleuriste). */
+  async function ouvrirNavigateur() {
+    mode = 'navigateur';
+    try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* rien */ }
+    await chargerDepuisNavigateur();
+    if (!reglages.initialise) {
+      installerExemples();
+      reglages.initialise = true;
+      for (const [nom, im] of images) await idbEcrire('images', im.blob, nom);
+      await persisterCommandes();
+      await persisterReglages();
+    }
+  }
+
+  /* Traduit les erreurs du navigateur en explications simples (avec le nom technique entre parenthèses). */
+  function erreurClaire(e) {
+    if (e && e.name === 'AbortError') return e;
+    const nom = (e && e.name) || 'Erreur';
+    let texte;
+    if (nom === 'SecurityError') {
+      texte = 'Le navigateur refuse d’ouvrir ce dossier depuis ce fichier. Vérifiez que le calendrier est ouvert avec Microsoft Edge ou Google Chrome, en double-cliquant sur le fichier (et non depuis GitHub).';
+    } else if (nom === 'NotAllowedError') {
+      texte = 'L’autorisation n’a pas été donnée. Cliquez à nouveau et choisissez « Modifier les fichiers » ou « Autoriser ».';
+    } else if (nom === 'NotFoundError') {
+      texte = 'Le dossier est introuvable (il a peut-être été déplacé ou renommé). Choisissez-le à nouveau.';
+    } else if (nom === 'TypeError') {
+      texte = 'Ce dossier ne peut pas être utilisé (dossier système ou protégé). Choisissez un dossier que vous avez créé, par exemple « Calendrier Arrosé » dans Documents.';
+    } else {
+      texte = 'Le dossier n’a pas pu être ouvert. Essayez un autre dossier, ou continuez sans dossier.';
+    }
+    const err = new Error(`${texte} (détail technique : ${nom}${e && e.message ? ' – ' + e.message : ''})`);
+    err.name = nom;
+    return err;
+  }
+
   return {
     /* Renvoie 'pret', 'choisir' (aucun dossier encore choisi) ou 'reconnecter' (autoriser à nouveau l'accès). */
     async demarrer() {
       base = await ouvrirBase();
-      if (typeof window.showDirectoryPicker !== 'function') {
-        mode = 'navigateur';
-        try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) { /* rien */ }
-        await chargerDepuisNavigateur();
-        if (!reglages.initialise) {
-          installerExemples();
-          reglages.initialise = true;
-          for (const [nom, im] of images) await idbEcrire('images', im.blob, nom);
-          await persisterCommandes();
-          await persisterReglages();
-        }
+      if (typeof window.showDirectoryPicker !== 'function' || (await idbLire('reglages', 'modeNavigateur'))) {
+        await ouvrirNavigateur();
         return 'pret';
       }
       poignee = await idbLire('reglages', 'dossier');
@@ -263,19 +289,32 @@ const Stockage = (() => {
 
     /* À appeler depuis un clic. nouveau = true pour choisir (ou changer) le dossier. */
     async connecter(nouveau) {
-      if (nouveau || !poignee) {
-        poignee = await window.showDirectoryPicker({ id: 'calendrier-arrose', mode: 'readwrite', startIn: 'documents' });
-      } else if ((await poignee.requestPermission({ mode: 'readwrite' })) !== 'granted') {
-        throw new Error('Le navigateur n’a pas reçu l’autorisation d’ouvrir le dossier. Cliquez à nouveau et choisissez « Autoriser ».');
+      try {
+        let h = poignee;
+        if (nouveau || !h) {
+          h = await window.showDirectoryPicker({ id: 'calendrier-arrose', mode: 'readwrite', startIn: 'documents' });
+        }
+        let etat = await h.queryPermission({ mode: 'readwrite' });
+        if (etat !== 'granted') etat = await h.requestPermission({ mode: 'readwrite' });
+        if (etat !== 'granted') {
+          const e = new Error('permission ' + etat); e.name = 'NotAllowedError'; throw e;
+        }
+        poignee = h;
+        await brancherDossier(h);
+        await idbEcrire('reglages', h, 'dossier');
+        await idbEcrire('reglages', false, 'modeNavigateur');
+      } catch (e) {
+        throw erreurClaire(e);
       }
-      if ((await poignee.queryPermission({ mode: 'readwrite' })) !== 'granted'
-        && (await poignee.requestPermission({ mode: 'readwrite' })) !== 'granted') {
-        throw new Error('Le navigateur n’a pas reçu l’autorisation d’écrire dans ce dossier.');
-      }
-      await brancherDossier(poignee);
-      await idbEcrire('reglages', poignee, 'dossier');
     },
 
+    /* « Continuer sans dossier » : enregistrement dans le navigateur, retenu pour les prochaines ouvertures. */
+    async utiliserNavigateur() {
+      await ouvrirNavigateur();
+      await idbEcrire('reglages', true, 'modeNavigateur');
+    },
+
+    dossierPossible() { return typeof window.showDirectoryPicker === 'function'; },
     mode() { return mode; },
     nomDossier() { return mode === 'dossier' ? `${poignee.name === dossier.name ? '' : poignee.name + ' › '}${dossier.name}` : ''; },
     nomDossierChoisi() { return poignee ? poignee.name : ''; },
