@@ -42,7 +42,7 @@ par un bandeau jaune si votre dernière sauvegarde a plus de 7 jours.
 
 ### 4. Faire une sauvegarde (chaque semaine par exemple)
 
-1. Cliquez sur **Sauvegarde** puis **Télécharger la sauvegarde**.
+1. Cliquez sur **Menu** → **Sauvegarde**, puis **Télécharger la sauvegarde**.
 2. Un fichier `sauvegarde-calendrier-AAAA-MM-JJ.json` arrive dans vos **Téléchargements** :
    il contient toutes les commandes **et toutes les photos**.
 3. Copiez-le sur une clé USB ou dans OneDrive.
@@ -50,7 +50,7 @@ par un bandeau jaune si votre dernière sauvegarde a plus de 7 jours.
 ### 5. Restaurer une sauvegarde (après un problème ou un changement d'ordinateur)
 
 1. Installez le calendrier (étape 1) si besoin, et ouvrez-le.
-2. Cliquez sur **Sauvegarde** → **Choisir un fichier de sauvegarde…** → choisissez votre dernier fichier de sauvegarde.
+2. Cliquez sur **Menu** → **Sauvegarde** → **Choisir un fichier de sauvegarde** → choisissez votre dernier fichier de sauvegarde.
 3. Toutes les commandes et les photos reviennent. (Les commandes présentes avant sont remplacées.)
 
 ### 6. Installer une nouvelle version
@@ -63,13 +63,20 @@ une sauvegarde avant.
 
 ## Fonctionnement
 
+- **Menu** (en haut à gauche) : nouvelle commande, commandes du mois, fleurs à commander, types d'évènements,
+  sauvegarde, et le rappel des couleurs des évènements.
 - **Calendrier** : vue du mois, semaine du lundi au dimanche, flèches ‹ › pour changer de mois, bouton « Aujourd'hui ».
-  Huit types d'évènements (mariage, fiançailles, baptême, communion, anniversaire, deuil, entreprise, autre),
-  chacun avec sa couleur. Une commande annulée apparaît barrée. Le calendrier tient sur un seul écran : si un jour
-  a trop de commandes, cliquez sur « + N autres » pour les voir toutes.
-- **Nouvelle commande** : cliquez sur un jour, ou sur « + Nouvelle commande ».
+  Le mois tient sur un seul écran : si un jour a trop de commandes, cliquez sur « + N autres ».
+  Une commande annulée apparaît barrée.
+- **Nouvelle commande** : cliquez sur un jour, ou Menu → « Nouvelle commande ».
 - **Fiche** : cliquez sur une commande. Cliquez sur une photo pour l'agrandir (flèches pour passer à la suivante).
-- **Commandes du mois** : s'affiche quand vous arrivez sur un mois qui a des commandes, et à tout moment avec le bouton.
+  Le bouton **Imprimer la fiche** sort une page A4 pour l'atelier (client, évènement, compositions, fleurs, moodboard, notes).
+- **Fleurs à commander** : dans chaque fiche, la partie « Fleurs à commander chez le grossiste » (fleur, couleur,
+  quantité, tiges/bottes/pots). Menu → « Fleurs à commander » additionne toutes les commandes de la semaine
+  (flèches pour changer de semaine) et peut s'imprimer. Les commandes sans liste détaillée sont signalées « à préciser ».
+- **Types d'évènements** : Menu → « Types d'évènements » pour changer un nom ou une couleur, ou ajouter vos propres types.
+  Si vous supprimez un type, ses commandes passent en « Autre » en gardant le nom en précision.
+- **Commandes du mois** : s'affiche quand vous arrivez sur un mois qui a des commandes, et à tout moment par le menu.
 - **Recherche** : tapez le nom ou le prénom du client en haut.
 - Les commandes d'exemple (Le Gall, Morvan, Riou) peuvent être supprimées depuis leur fiche.
 

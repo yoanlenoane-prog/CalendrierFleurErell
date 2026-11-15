@@ -156,8 +156,9 @@ const Stockage = (() => {
         const blob = await transaction(['images'], 'readonly', (tx) => tx.objectStore('images').get(nom));
         if (blob) images[nom] = await blobVersBase64(blob);
       }
+      const types = await lireReglage('types');
       await ecrireReglage('derniereSauvegarde', new Date().toISOString());
-      return { application: 'calendrier-arrose', version: 1, exporteLe: new Date().toISOString(), commandes, images };
+      return { application: 'calendrier-arrose', version: 2, exporteLe: new Date().toISOString(), commandes, images, types: types || null };
     },
 
     async importer(texte) {
@@ -167,9 +168,12 @@ const Stockage = (() => {
         throw new Error('Ce fichier n’est pas une sauvegarde du calendrier.');
       }
       await remplacerTout(donnees.commandes, donnees.images);
+      if (Array.isArray(donnees.types) && donnees.types.length) await ecrireReglage('types', donnees.types);
       return donnees.commandes.length;
     },
 
     derniereSauvegarde() { return lireReglage('derniereSauvegarde'); },
+    lireTypes() { return lireReglage('types'); },
+    ecrireTypes(types) { return ecrireReglage('types', types); },
   };
 })();

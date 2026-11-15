@@ -10,6 +10,10 @@
 </head>
 <body>
   <header class="entete">
+    <button class="btn-menu" id="btn-menu" aria-label="Ouvrir le menu" aria-controls="menu" aria-expanded="false">
+      <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <span>Menu</span><span class="point-alerte" id="point-menu" hidden></span>
+    </button>
     <div class="marque" aria-label="Arrosé – La cave fleurie">
       <svg class="marque-dessin" viewBox="0 0 60 66" aria-hidden="true">
         <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -43,11 +47,32 @@
       <input type="search" id="recherche" placeholder="Rechercher un client" autocomplete="off" aria-label="Rechercher un client">
       <div id="resultats" class="resultats" hidden></div>
     </div>
-    <div class="actions-entete">
-      <button class="btn btn-clair" id="btn-reglages">Sauvegarde<span class="point-alerte" id="point-sauvegarde" hidden></span></button>
-      <button class="btn btn-blanc" id="btn-nouvelle">Nouvelle commande</button>
-    </div>
   </header>
+
+  <!-- Menu latéral -->
+  <div class="fond-menu" id="fond-menu" hidden></div>
+  <aside class="menu" id="menu" aria-label="Menu" hidden>
+    <div class="menu-entete">
+      <span>Menu</span>
+      <button class="fermer" id="menu-fermer" aria-label="Fermer le menu"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <nav class="menu-liens">
+      <button class="menu-lien menu-principal" id="btn-nouvelle">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nouvelle commande</button>
+      <button class="menu-lien" id="btn-commandes-mois">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Commandes du mois</button>
+      <button class="menu-lien" id="btn-fleurs">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M12 11v10M12 16c-3 0-5-2-5-4 3 0 5 2 5 4zM12 18c3 0 5-2 5-4-3 0-5 2-5 4z"/></svg>Fleurs à commander</button>
+      <button class="menu-lien" id="btn-types">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="8" cy="16" r="3"/><circle cx="16" cy="16" r="3"/></svg>Types d'évènements</button>
+      <button class="menu-lien" id="btn-reglages">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Sauvegarde<span class="point-alerte-menu" id="point-sauvegarde" hidden>à faire</span></button>
+    </nav>
+    <div class="menu-legende">
+      <div class="menu-titre">Couleurs des évènements</div>
+      <div id="legende"></div>
+    </div>
+  </aside>
 
   <main class="principal">
     <div class="barre-mois">
@@ -61,10 +86,8 @@
         </button>
         <button class="btn btn-contour" id="btn-aujourdhui">Aujourd'hui</button>
       </div>
-      <div class="legende" id="legende"></div>
       <div class="navigation">
         <button class="lien-rappel" id="rappel-sauvegarde" hidden></button>
-        <button class="btn btn-contour" id="btn-commandes-mois">Commandes du mois</button>
       </div>
     </div>
 
@@ -163,6 +186,17 @@
               <option value="Dessus de cercueil"><option value="Raquette"><option value="Bouquet rond">
             </datalist>
           </div>
+          <div class="compositions">
+            <div class="compositions-titre">Fleurs à commander chez le grossiste</div>
+            <div id="liste-fleurs"></div>
+            <button type="button" class="btn btn-contour btn-petit" id="ajouter-fleur">Ajouter une fleur</button>
+            <datalist id="suggestions-fleurs">
+              <option value="Rose"><option value="Rose de jardin"><option value="Pivoine"><option value="Renoncule"><option value="Lisianthus">
+              <option value="Gypsophile"><option value="Eucalyptus"><option value="Hortensia"><option value="Dahlia"><option value="Chrysanthème">
+              <option value="Lys"><option value="Tulipe"><option value="Anémone"><option value="Delphinium"><option value="Alstroemeria">
+              <option value="Œillet"><option value="Freesia"><option value="Astilbe"><option value="Ruscus"><option value="Pittosporum">
+            </datalist>
+          </div>
         </section>
 
         <section class="bloc">
@@ -203,6 +237,8 @@
       </div>
       <div class="fenetre-pied">
         <button type="button" class="btn btn-danger" id="fiche-supprimer">Supprimer</button>
+        <button type="button" class="btn btn-contour" id="fiche-imprimer">
+          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer la fiche</button>
         <span class="espace"></span>
         <button type="button" class="btn btn-contour" id="fiche-annuler">Annuler</button>
         <button type="submit" class="btn btn-plein" id="fiche-enregistrer">Enregistrer</button>
@@ -242,6 +278,54 @@
       </div>
     </div>
   </div>
+
+  <!-- Types d'évènements -->
+  <div class="fond" id="fenetre-types" hidden>
+    <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-types">
+      <div class="fenetre-entete">
+        <div>
+          <h2 id="titre-types">Types d'évènements</h2>
+          <p class="sous-titre">Changez un nom ou une couleur, ou ajoutez vos propres types. Les modifications sont enregistrées tout de suite.</p>
+        </div>
+        <button class="fermer" data-fermer aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div class="fenetre-corps">
+        <div id="liste-types" class="liste-types"></div>
+        <form class="ajout-type" id="form-type">
+          <input type="color" id="nouveau-type-couleur" value="#B07A9A" aria-label="Couleur du nouveau type">
+          <input id="nouveau-type-nom" placeholder="Nouveau type (ex. : Inauguration)" autocomplete="off" aria-label="Nom du nouveau type">
+          <button type="submit" class="btn btn-plein">Ajouter</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fleurs à commander -->
+  <div class="fond" id="fenetre-fleurs" hidden>
+    <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-fleurs">
+      <div class="fenetre-entete">
+        <div>
+          <h2 id="titre-fleurs">Fleurs à commander</h2>
+          <p class="sous-titre" id="semaine-fleurs"></p>
+        </div>
+        <div class="navigation">
+          <button class="btn btn-icone" id="semaine-precedente" aria-label="Semaine précédente" title="Semaine précédente"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button class="btn btn-icone" id="semaine-suivante" aria-label="Semaine suivante" title="Semaine suivante"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+          <button class="fermer" data-fermer aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+      </div>
+      <div class="fenetre-corps" id="contenu-fleurs"></div>
+      <div class="fenetre-pied">
+        <span class="espace"></span>
+        <button class="btn btn-contour" id="imprimer-fleurs">
+          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer la liste</button>
+        <button class="btn btn-plein" data-fermer>Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenu préparé pour l'impression -->
+  <div id="zone-impression"></div>
 
   <!-- Agrandissement d'image -->
   <div class="visionneuse" id="visionneuse" hidden>

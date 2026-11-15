@@ -16,15 +16,8 @@
   --rayon: 10px;
 }
 
-/* Couleurs des types d'évènements : fond, trait */
-.t-mariage      { --fond: #F7DEE5; --trait-type: #B5486B; }
-.t-fiancailles  { --fond: #F8E4DF; --trait-type: #BF6A5C; }
-.t-bapteme      { --fond: #DDE8F3; --trait-type: #4D7BA6; }
-.t-communion    { --fond: #E8E3F2; --trait-type: #7864A3; }
-.t-anniversaire { --fond: #FBE7D4; --trait-type: #C47A35; }
-.t-deuil        { --fond: #E6E8EB; --trait-type: #5E6773; }
-.t-entreprise   { --fond: #E1ECDF; --trait-type: #5A8758; }
-.t-autre        { --fond: #EEE8DD; --trait-type: #8C7A58; }
+/* Les couleurs des types d'évènements sont créées par le programme (réglables par la fleuriste). */
+.t-autre { --fond: #EEE8DD; --trait-type: #8C7A58; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
@@ -71,6 +64,12 @@ button { font-family: inherit; }
   flex: none; background: var(--framboise); color: #fff;
   display: flex; align-items: center; gap: 20px; padding: 8px 24px; min-height: 64px;
 }
+.btn-menu {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #fff;
+  border: 1px solid rgba(255,255,255,.45); border-radius: 6px; padding: 8px 14px; min-height: 40px; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 500; letter-spacing: .04em;
+}
+.btn-menu:hover { background: rgba(255,255,255,.12); }
 .marque { display: flex; align-items: center; gap: 10px; user-select: none; }
 .marque-dessin { width: 40px; height: 44px; color: #fff; }
 .marque-texte { display: flex; flex-direction: column; line-height: 1; }
@@ -95,7 +94,6 @@ button { font-family: inherit; }
 .resultat:hover, .resultat:focus { background: var(--framboise-pale); outline: none; }
 .resultat small { color: var(--texte-doux); margin-left: auto; white-space: nowrap; }
 .resultats .vide { padding: 12px; color: var(--texte-doux); font-size: 14px; }
-.actions-entete { display: flex; gap: 10px; }
 
 /* ---------- Barre du mois ---------- */
 .principal { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 14px 24px 18px; gap: 12px; }
@@ -103,8 +101,6 @@ button { font-family: inherit; }
 .navigation { display: flex; align-items: center; gap: 8px; }
 #titre-mois::first-letter { text-transform: uppercase; }
 #titre-mois { font-family: var(--serif); font-size: 32px; font-weight: 600; color: var(--framboise); min-width: 220px; text-align: center; line-height: 1; }
-.legende { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; font-size: 12.5px; color: var(--texte-doux); flex: 1; }
-.legende span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .pastille { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--trait-type); flex: none; }
 .lien-rappel {
   border: none; background: #FDF1DA; color: #7A5212; font: inherit; font-size: 13px; padding: 7px 12px; border-radius: 6px; cursor: pointer;
@@ -281,9 +277,6 @@ input.erreur { border-color: #C0392B; background: #FFF5F4; }
 }
 
 /* ---------- Écrans moyens (tablette, petit portable) ---------- */
-@media (max-width: 1100px) {
-  .legende { display: none; }
-}
 @media (max-width: 900px) {
   .entete { padding: 8px 14px; gap: 12px; }
   .marque-sous { display: none; }
@@ -305,4 +298,106 @@ input.erreur { border-color: #C0392B; background: #FFF5F4; }
   .fond { padding: 0; }
   .fenetre { max-height: 100vh; border-radius: 0; min-height: 100vh; }
   .tableau td, .tableau th { padding: 8px 6px; font-size: 13px; }
+}
+
+/* ---------- Menu latéral ---------- */
+.fond-menu { position: fixed; inset: 0; z-index: 40; background: rgba(40, 18, 24, .35); animation: apparition .15s ease-out; }
+.menu {
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 45; width: 300px; max-width: 86vw;
+  background: var(--papier); box-shadow: 8px 0 32px rgba(0,0,0,.18); display: flex; flex-direction: column;
+  animation: glisse .18s ease-out; overflow-y: auto;
+}
+@keyframes glisse { from { transform: translateX(-100%); } to { transform: none; } }
+.menu-entete {
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 14px 22px;
+  background: var(--framboise); color: #fff; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+}
+.menu-entete .fermer { color: #fff; }
+.menu-entete .fermer:hover { background: rgba(255,255,255,.15); color: #fff; }
+.menu-liens { display: flex; flex-direction: column; padding: 12px; gap: 2px; }
+.menu-lien {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: none; background: none;
+  font: inherit; font-size: 15px; color: var(--texte); padding: 11px 12px; border-radius: 6px; cursor: pointer;
+}
+.menu-lien:hover { background: var(--framboise-pale); color: var(--framboise); }
+.menu-lien .icone { color: var(--framboise); }
+.menu-principal { background: var(--framboise); color: #fff; margin-bottom: 8px; font-weight: 500; }
+.menu-principal .icone { color: #fff; }
+.menu-principal:hover { background: var(--framboise-fonce); color: #fff; }
+.point-alerte-menu { margin-left: auto; font-size: 11.5px; background: #FDF1DA; color: #7A5212; padding: 2px 8px; border-radius: 4px; }
+.menu-legende { margin-top: auto; padding: 18px 24px 24px; border-top: 1px solid var(--trait); }
+.menu-titre { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--texte-doux); font-weight: 500; margin-bottom: 10px; }
+#legende { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; font-size: 13.5px; }
+#legende span { display: inline-flex; align-items: center; gap: 8px; }
+#legende .pastille { width: 10px; height: 10px; }
+
+/* ---------- Fleurs à commander (fiche) ---------- */
+.ligne-fleur { grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) 80px 96px 40px; }
+
+/* ---------- Types d'évènements ---------- */
+.liste-types { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.ligne-type, .ajout-type { display: grid; grid-template-columns: 48px minmax(0, 1fr) 110px 40px; gap: 10px; align-items: center; }
+.ajout-type { grid-template-columns: 48px minmax(0, 1fr) auto; padding-top: 16px; border-top: 1px solid var(--trait); }
+input[type=color] { width: 48px; height: 40px; padding: 3px; border: 1px solid var(--trait-fort); border-radius: 6px; background: #fff; cursor: pointer; }
+.nb-type { font-size: 13px; color: var(--texte-doux); text-align: right; }
+.supprimer-type {
+  width: 40px; height: 40px; border: 1px solid var(--trait-fort); background: #fff; color: var(--texte-doux); border-radius: 6px;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+span.supprimer-type { border: none; background: none; cursor: default; }
+button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
+.supprimer-type .icone { width: 16px; height: 16px; }
+
+/* ---------- Liste des fleurs de la semaine ---------- */
+.tableau-simple tbody tr { cursor: default; }
+.tableau-simple tbody tr:hover { background: var(--papier); }
+.tableau .nb { text-align: right; white-space: nowrap; }
+.tableau .pour { font-size: 13px; color: var(--texte-doux); }
+.vide-liste { color: var(--texte-doux); }
+.titre-section { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--framboise); margin: 22px 0 8px; }
+.liste-simple { margin: 0; padding: 0; list-style: none; }
+.liste-simple li { padding: 10px 12px; background: var(--papier); border-bottom: 1px solid var(--trait); font-size: 14px; cursor: pointer; }
+.liste-simple li:hover { background: var(--framboise-pale); }
+.liste-simple em { color: var(--texte-doux); }
+
+/* ---------- Impression ---------- */
+#zone-impression { display: none; }
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body { height: auto !important; overflow: visible !important; background: #fff !important; display: block !important; }
+  body > *:not(#zone-impression) { display: none !important; }
+  #zone-impression { display: block !important; color: #000; font-size: 11pt; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .imp-entete { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--framboise); padding-bottom: 6pt; margin-bottom: 10pt; }
+  .imp-marque { font-family: var(--sans); font-weight: 600; letter-spacing: .12em; font-size: 16pt; color: var(--framboise); }
+  .imp-sous-marque { font-family: var(--script); font-size: 13pt; color: var(--framboise); }
+  .imp-titre { text-align: right; }
+  .imp-titre h1 { font-family: var(--serif); font-size: 20pt; color: var(--framboise); }
+  .imp-titre p { margin: 0; font-size: 9pt; color: #555; }
+  .imp-client { font-family: var(--serif); font-size: 22pt; font-weight: 600; margin-top: 4pt; }
+  .imp-evenement { font-size: 12pt; margin: 2pt 0 10pt; }
+  .imp-type { display: inline-block; background: var(--fond); border-left: 3pt solid var(--trait-type); padding: 1pt 6pt; margin-right: 6pt; font-weight: 500; }
+  .imp-colonnes { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+  .imp-infos { border-collapse: collapse; width: 100%; font-size: 10pt; }
+  .imp-infos th { text-align: left; color: #666; font-weight: 500; padding: 2pt 8pt 2pt 0; vertical-align: top; white-space: nowrap; width: 1%; }
+  .imp-infos td { padding: 2pt 0; vertical-align: top; }
+  #zone-impression h2 { font-family: var(--sans); font-size: 9.5pt; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--framboise); margin: 12pt 0 4pt; }
+  #zone-impression p { margin: 0; line-height: 1.4; }
+  .imp-tableau, #zone-impression .tableau { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  .imp-tableau th, #zone-impression .tableau th { text-align: left; border-bottom: 1pt solid #999; padding: 3pt 4pt; font-weight: 600; font-size: 9pt; color: #444; }
+  .imp-tableau td, #zone-impression .tableau td { border-bottom: .5pt solid #ccc; padding: 4pt; }
+  .imp-tableau .nb { text-align: right; }
+  .imp-vide { color: #777; }
+  .imp-galerie { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6pt; }
+  .imp-galerie img { width: 100%; height: 48mm; object-fit: cover; border-radius: 3pt; }
+  #zone-impression .titre-section { font-size: 9.5pt; }
+  #zone-impression .liste-simple li { padding: 3pt 0; border-bottom: .5pt solid #ccc; font-size: 10pt; }
+  tr, img, li { break-inside: avoid; }
+}
+
+@media (max-width: 640px) {
+  .btn-menu span:not(.point-alerte) { display: none; }
+  .ligne-fleur { grid-template-columns: 1fr 1fr; }
+  .ligne-type { grid-template-columns: 48px minmax(0, 1fr) 40px; }
+  .nb-type { display: none; }
 }
