@@ -1,0 +1,56 @@
+[
+  {
+    "id": "exemple-mariage",
+    "nom": "Le Gall", "prenom": "Camille", "telephone": "06 12 34 56 78", "email": "camille.legall@exemple.fr",
+    "type": "mariage", "typePrecision": "", "date": "2026-11-28", "heure": "14:30",
+    "lieu": "Manoir de Kerlann, salle de réception", "mode": "livraison",
+    "description": "Mariage champêtre et romantique, environ 90 invités. La mariée aime les fleurs légères, un peu « sauvages », rien de trop rigide.",
+    "fleurs": "Pivoines, roses de jardin, gypsophile, eucalyptus", "couleurs": "Blanc, rose poudré, vert sauge",
+    "compositions": [
+      { "nom": "Bouquet de mariée", "quantite": "1" },
+      { "nom": "Boutonnière", "quantite": "6" },
+      { "nom": "Centre de table", "quantite": "10" },
+      { "nom": "Arche", "quantite": "1" }
+    ],
+    "inspirations": ["ex_mariage_insp1.jpg", "ex_mariage_insp2.jpg"],
+    "moodboard": ["ex_mariage_mood1.jpg", "ex_mariage_mood2.jpg", "ex_mariage_mood3.jpg"],
+    "moodboardNotes": "Proposer deux variantes pour l'arche : une asymétrique, une pleine. Ajouter quelques touches de framboise dans les centres de table ?",
+    "statut": "confirmee", "prix": "1850", "acompte": "600",
+    "notesInternes": "Livraison la veille au soir possible (clés auprès du gardien). Commander les pivoines 10 jours avant.",
+    "creeLe": "2026-06-02T10:00:00.000Z", "modifieLe": "2026-11-10T10:00:00.000Z"
+  },
+  {
+    "id": "exemple-bapteme",
+    "nom": "Morvan", "prenom": "Julien", "telephone": "06 98 76 54 32", "email": "",
+    "type": "bapteme", "typePrecision": "", "date": "2026-11-22", "heure": "10:30",
+    "lieu": "Église Saint-Pierre", "mode": "retrait",
+    "description": "Baptême de Léa. Décoration douce pour l'église et la table du repas.",
+    "fleurs": "Roses, lisianthus, gypsophile", "couleurs": "Blanc et bleu ciel",
+    "compositions": [
+      { "nom": "Décoration d'église", "quantite": "2" },
+      { "nom": "Centre de table", "quantite": "3" }
+    ],
+    "inspirations": ["ex_bapteme_insp1.jpg"],
+    "moodboard": ["ex_bapteme_mood1.jpg"],
+    "moodboardNotes": "Rester sur des petites compositions basses pour la table.",
+    "statut": "preparation", "prix": "320", "acompte": "100",
+    "notesInternes": "Retrait le samedi 21 en fin de journée.",
+    "creeLe": "2026-09-14T10:00:00.000Z", "modifieLe": "2026-11-12T10:00:00.000Z"
+  },
+  {
+    "id": "exemple-anniversaire",
+    "nom": "Riou", "prenom": "Martine", "telephone": "02 98 11 22 33", "email": "martine.riou@exemple.fr",
+    "type": "autre", "typePrecision": "Anniversaire 60 ans", "date": "2026-11-22", "heure": "19:00",
+    "lieu": "Restaurant Le Quai", "mode": "livraison",
+    "description": "Surprise pour les 60 ans de son mari. Ambiance chaleureuse, couleurs d'automne.",
+    "fleurs": "Dahlias, roses orangées, feuillages d'automne", "couleurs": "Orange, bordeaux, cuivre",
+    "compositions": [
+      { "nom": "Centre de table", "quantite": "4" },
+      { "nom": "Composition d'entrée", "quantite": "1" }
+    ],
+    "inspirations": [], "moodboard": [], "moodboardNotes": "",
+    "statut": "devis", "prix": "240", "acompte": "",
+    "notesInternes": "Rappeler la cliente pour valider le devis.",
+    "creeLe": "2026-11-05T10:00:00.000Z", "modifieLe": "2026-11-05T10:00:00.000Z"
+  }
+]

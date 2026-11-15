@@ -1,0 +1,268 @@
+:root {
+  --framboise: #9E1F3F;
+  --framboise-fonce: #7E1631;
+  --framboise-clair: #F7E3E8;
+  --creme: #FBF6F1;
+  --blanc: #FFFFFF;
+  --texte: #3B2A2E;
+  --texte-doux: #7A666B;
+  --bordure: #EADCDC;
+  --ombre: 0 10px 30px rgba(94, 30, 48, .14);
+
+  --mariage-fond: #FADDE6;  --mariage-trait: #C2416B;
+  --bapteme-fond: #DCEAF6;  --bapteme-trait: #4A7FB0;
+  --autre-fond:   #E3EEDB;  --autre-trait:   #5E8A4C;
+
+  --titre: Georgia, "Times New Roman", serif;
+  --rayon: 14px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  color: var(--texte);
+  background: var(--creme);
+  -webkit-text-size-adjust: 100%;
+}
+[hidden] { display: none !important; }
+h1, h2, h3 { font-family: var(--titre); font-weight: normal; margin: 0; }
+
+/* ---------- Boutons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font: inherit; font-size: 15px; text-decoration: none; cursor: pointer;
+  border-radius: 999px; padding: 9px 18px; border: 1px solid transparent;
+  min-height: 42px; transition: background .15s, color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.btn-plein { background: var(--framboise); color: #fff; }
+.btn-plein:hover { background: var(--framboise-fonce); }
+.btn-blanc { background: #fff; color: var(--framboise); font-weight: 600; }
+.btn-blanc:hover { background: var(--framboise-clair); }
+.btn-clair { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.45); }
+.btn-clair:hover { background: rgba(255,255,255,.25); }
+.btn-contour { background: #fff; color: var(--framboise); border-color: #DDBFC7; }
+.btn-contour:hover { background: var(--framboise-clair); }
+.btn-danger { background: #fff; color: #A3262B; border-color: #E6B8BA; }
+.btn-danger:hover { background: #FBE9E9; }
+.btn-rond { width: 42px; height: 42px; padding: 0; font-size: 26px; line-height: 1; background: #fff; color: var(--framboise); border-color: #DDBFC7; }
+.btn-rond:hover { background: var(--framboise-clair); }
+.btn-petit { min-height: 36px; padding: 6px 14px; font-size: 14px; }
+
+/* ---------- En-tête ---------- */
+.entete {
+  background: var(--framboise);
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 10px 24px;
+  position: sticky; top: 0; z-index: 10;
+  box-shadow: 0 2px 12px rgba(0,0,0,.12);
+}
+.logo { height: 52px; width: auto; display: block; border-radius: 8px; }
+.recherche { position: relative; flex: 1 1 220px; max-width: 420px; margin-left: auto; }
+.recherche input {
+  width: 100%; font: inherit; font-size: 15px; padding: 10px 16px; border-radius: 999px;
+  border: none; background: rgba(255,255,255,.95); color: var(--texte); min-height: 42px;
+}
+.resultats {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #fff; border-radius: var(--rayon); box-shadow: var(--ombre);
+  max-height: 60vh; overflow: auto; padding: 6px; z-index: 20;
+}
+.resultat {
+  display: flex; gap: 10px; align-items: center; width: 100%; text-align: left;
+  font: inherit; border: none; background: none; padding: 10px; border-radius: 10px; cursor: pointer; color: var(--texte);
+}
+.resultat:hover, .resultat:focus { background: var(--framboise-clair); outline: none; }
+.resultat small { color: var(--texte-doux); margin-left: auto; white-space: nowrap; }
+.resultats .vide { padding: 12px; color: var(--texte-doux); }
+.actions-entete { display: flex; gap: 10px; }
+
+/* ---------- Mois ---------- */
+.principal { padding: 20px 24px 32px; max-width: 1500px; margin: 0 auto; }
+.barre-mois { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.navigation { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#titre-mois { font-size: 30px; color: var(--framboise); min-width: 230px; text-align: center; text-transform: capitalize; }
+.legende { display: flex; gap: 14px; font-size: 14px; color: var(--texte-doux); margin-right: 6px; }
+.legende span { display: inline-flex; align-items: center; gap: 6px; }
+.pastille { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid; }
+.pastille.type-mariage { background: var(--mariage-fond); border-color: var(--mariage-trait); }
+.pastille.type-bapteme { background: var(--bapteme-fond); border-color: var(--bapteme-trait); }
+.pastille.type-autre   { background: var(--autre-fond);   border-color: var(--autre-trait); }
+
+.calendrier { background: #fff; border-radius: 18px; box-shadow: var(--ombre); overflow: hidden; border: 1px solid var(--bordure); }
+.jours-semaine, .grille { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.jours-semaine div {
+  padding: 10px 8px; text-align: center; font-size: 13px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--framboise); background: var(--framboise-clair); font-weight: 600;
+}
+.jour {
+  min-height: 120px; border-top: 1px solid var(--bordure); border-left: 1px solid var(--bordure);
+  padding: 6px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; position: relative;
+  transition: background .12s;
+}
+.jour:nth-child(7n+1) { border-left: none; }
+.jour:hover { background: #FDF5F7; }
+.jour:hover .numero::after { content: "+"; margin-left: auto; color: var(--framboise); font-weight: 600; opacity: .7; }
+.jour.hors-mois { background: #FAF7F5; }
+.jour.hors-mois .numero span { color: #C4B6B9; }
+.jour.weekend:not(.hors-mois) { background: #FFFCFA; }
+.jour.weekend:not(.hors-mois):hover { background: #FDF5F7; }
+.numero { display: flex; align-items: center; font-size: 14px; color: var(--texte-doux); padding: 2px 4px; }
+.jour.aujourdhui .numero span {
+  background: var(--framboise); color: #fff; border-radius: 999px; min-width: 26px; height: 26px;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 600;
+}
+.puce {
+  display: block; width: 100%; text-align: left; font: inherit; font-size: 13px; line-height: 1.25;
+  border: none; border-left: 4px solid; border-radius: 8px; padding: 5px 7px; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--texte);
+}
+.puce:hover { filter: brightness(.96); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+.puce strong { font-weight: 600; }
+.puce .heure { color: var(--texte-doux); margin-right: 3px; }
+.type-mariage.puce { background: var(--mariage-fond); border-color: var(--mariage-trait); }
+.type-bapteme.puce { background: var(--bapteme-fond); border-color: var(--bapteme-trait); }
+.type-autre.puce   { background: var(--autre-fond);   border-color: var(--autre-trait); }
+.puce.annulee { opacity: .55; text-decoration: line-through; }
+.astuce { color: var(--texte-doux); font-size: 14px; text-align: center; margin-top: 14px; }
+
+/* ---------- Fenêtres ---------- */
+.fond {
+  position: fixed; inset: 0; z-index: 50; background: rgba(59, 22, 33, .42);
+  display: flex; align-items: flex-start; justify-content: center; padding: 4vh 16px; overflow-y: auto;
+  animation: apparition .15s ease-out;
+}
+@keyframes apparition { from { opacity: 0; } to { opacity: 1; } }
+.fenetre {
+  background: var(--creme); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  width: 100%; display: flex; flex-direction: column; max-height: 92vh; overflow: hidden;
+}
+.fenetre-moyenne { max-width: 720px; }
+.fenetre-large { max-width: 980px; }
+.fenetre-entete {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 22px; background: var(--framboise); color: #fff;
+}
+.fenetre-entete h2 { font-size: 24px; }
+.fermer {
+  background: none; border: none; color: inherit; font-size: 32px; line-height: 1; cursor: pointer;
+  width: 44px; height: 44px; border-radius: 50%;
+}
+.fermer:hover { background: rgba(255,255,255,.18); }
+.fenetre-corps { padding: 18px 22px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.fenetre-pied {
+  display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap;
+  padding: 14px 22px; border-top: 1px solid var(--bordure); background: #fff;
+}
+.espace { flex: 1; }
+.sous-titre { margin: 0 0 12px; color: var(--texte-doux); }
+
+/* Tableau de l'alerte */
+.tableau { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
+.tableau th { text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--texte-doux); font-weight: 600; padding: 4px 12px; }
+.tableau tbody tr { background: #fff; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.tableau tbody tr:hover { background: var(--framboise-clair); }
+.tableau td { padding: 12px; }
+.tableau td:first-child { border-radius: 10px 0 0 10px; white-space: nowrap; }
+.tableau td:last-child { border-radius: 0 10px 10px 0; }
+.type-etiquette { display: inline-flex; align-items: center; gap: 6px; }
+
+.statut {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 13px; white-space: nowrap;
+}
+.statut-devis { background: #F1E9DE; color: #7A5C33; }
+.statut-confirmee { background: #DFF0DC; color: #2F6B2A; }
+.statut-preparation { background: #FCE7CF; color: #94541A; }
+.statut-livree { background: #DCE8F5; color: #2D5B8A; }
+.statut-annulee { background: #ECE7E8; color: #807276; text-decoration: line-through; }
+
+/* ---------- Fiche ---------- */
+.fiche-corps { display: flex; flex-direction: column; gap: 14px; }
+.bloc { background: #fff; border-radius: var(--rayon); padding: 16px 18px; border: 1px solid var(--bordure); }
+.bloc h3 { font-size: 19px; color: var(--framboise); margin-bottom: 12px; }
+.bloc p { margin: 0 0 12px; line-height: 1.45; }
+.champs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+.champs .large, .bloc > label.large { grid-column: 1 / -1; }
+label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--texte-doux); font-weight: 600; }
+.bloc > label.large { margin-top: 14px; }
+input:not([type=radio]):not([type=file]), select, textarea {
+  font: inherit; font-size: 16px; font-weight: normal; color: var(--texte);
+  border: 1px solid #DCCBCF; border-radius: 10px; padding: 9px 12px; background: #FFFDFC; width: 100%; min-height: 42px;
+}
+textarea { resize: vertical; line-height: 1.4; }
+input:focus, select:focus, textarea:focus { outline: 2px solid rgba(158, 31, 63, .35); border-color: var(--framboise); }
+input.erreur { border-color: #C0392B; background: #FFF4F3; }
+.choix { border: none; padding: 0; margin: 0; display: flex; gap: 22px; flex-wrap: wrap; align-items: center; }
+.choix legend { font-size: 13px; color: var(--texte-doux); font-weight: 600; padding: 0; margin-bottom: 6px; width: 100%; }
+.radio { flex-direction: row; align-items: center; gap: 8px; font-size: 16px; font-weight: normal; color: var(--texte); cursor: pointer; }
+.radio input { width: 20px; height: 20px; accent-color: var(--framboise); }
+.reste {
+  display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--texte-doux); font-weight: 600;
+}
+.reste strong { font-size: 20px; color: var(--framboise); font-family: var(--titre); font-weight: normal; padding-top: 6px; }
+
+.compositions { margin-top: 14px; }
+.compositions-titre { font-size: 13px; color: var(--texte-doux); font-weight: 600; margin-bottom: 6px; }
+.ligne-composition { display: grid; grid-template-columns: minmax(0, 1fr) 100px 42px; gap: 8px; margin-bottom: 8px; }
+.ligne-composition button {
+  border: 1px solid #E6B8BA; background: #fff; color: #A3262B; border-radius: 10px; font-size: 20px; cursor: pointer;
+}
+
+.galerie { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.galerie-grande { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.galerie:empty { display: none; }
+.vignette { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--framboise-clair); }
+.vignette img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+.vignette .retirer {
+  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,.92); color: #A3262B; font-size: 18px; cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.vignette.envoi { display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--texte-doux); }
+.ajout-photo { position: relative; }
+
+.adresses { display: flex; flex-direction: column; gap: 6px; }
+.adresses code { font-size: 20px; background: var(--framboise-clair); color: var(--framboise); padding: 8px 14px; border-radius: 10px; align-self: flex-start; user-select: all; }
+
+/* ---------- Visionneuse ---------- */
+.visionneuse {
+  position: fixed; inset: 0; z-index: 80; background: rgba(20, 8, 12, .92);
+  display: flex; align-items: center; justify-content: center;
+}
+.visionneuse img { max-width: 88vw; max-height: 88vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.fermer-visionneuse { position: absolute; top: 14px; right: 14px; color: #fff; }
+.fleche {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 56px; height: 56px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,.15); color: #fff; font-size: 36px; cursor: pointer;
+}
+.fleche:hover { background: rgba(255,255,255,.3); }
+.fleche-gauche { left: 16px; } .fleche-droite { right: 16px; }
+.compteur { position: absolute; bottom: 16px; color: #fff; opacity: .8; font-size: 14px; }
+
+.message-flottant {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 100;
+  background: var(--texte); color: #fff; padding: 12px 22px; border-radius: 999px; box-shadow: var(--ombre);
+}
+
+/* ---------- Tablette et petits écrans ---------- */
+@media (max-width: 900px) {
+  .entete { padding: 10px 14px; }
+  .logo { height: 42px; }
+  .principal { padding: 14px 10px 24px; }
+  #titre-mois { font-size: 24px; min-width: 180px; }
+  .jour { min-height: 92px; padding: 4px; }
+  .puce { font-size: 12px; padding: 4px 5px; }
+  .puce .type-texte { display: none; }
+  .jours-semaine div { font-size: 11px; padding: 8px 2px; }
+}
+@media (max-width: 640px) {
+  .recherche { order: 3; flex-basis: 100%; max-width: none; }
+  .champs { grid-template-columns: 1fr; }
+  .jours-semaine div { font-size: 0; }
+  .jours-semaine div::first-letter { font-size: 11px; }
+  .legende { display: none; }
+  .fond { padding: 0; }
+  .fenetre { max-height: 100vh; border-radius: 0; min-height: 100vh; }
+  .tableau td, .tableau th { padding: 8px 6px; font-size: 14px; }
+}

@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#9E1F3F">
+  <title>Calendrier des commandes – Arrosé</title>
+  <link rel="icon" href="logo.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="entete">
+    <img src="logo.png" alt="Arrosé – La cave fleurie" class="logo">
+    <div class="recherche">
+      <input type="search" id="recherche" placeholder="Rechercher un client…" autocomplete="off" aria-label="Rechercher un client">
+      <div id="resultats" class="resultats" hidden></div>
+    </div>
+    <div class="actions-entete">
+      <button class="btn btn-clair" id="btn-reglages" title="Sauvegarde et tablette">💾 Sauvegarde</button>
+      <button class="btn btn-blanc" id="btn-nouvelle">+ Nouvelle commande</button>
+    </div>
+  </header>
+
+  <main class="principal">
+    <div class="barre-mois">
+      <div class="navigation">
+        <button class="btn btn-rond" id="mois-precedent" aria-label="Mois précédent">‹</button>
+        <h1 id="titre-mois">…</h1>
+        <button class="btn btn-rond" id="mois-suivant" aria-label="Mois suivant">›</button>
+        <button class="btn btn-contour" id="btn-aujourdhui">Aujourd'hui</button>
+      </div>
+      <div class="navigation">
+        <div class="legende">
+          <span><i class="pastille type-mariage"></i>Mariage</span>
+          <span><i class="pastille type-bapteme"></i>Baptême</span>
+          <span><i class="pastille type-autre"></i>Autre</span>
+        </div>
+        <button class="btn btn-contour" id="btn-commandes-mois">Commandes du mois</button>
+      </div>
+    </div>
+
+    <div class="calendrier">
+      <div class="jours-semaine">
+        <div>Lundi</div><div>Mardi</div><div>Mercredi</div><div>Jeudi</div><div>Vendredi</div><div>Samedi</div><div>Dimanche</div>
+      </div>
+      <div class="grille" id="grille"></div>
+    </div>
+    <p class="astuce">Astuce : cliquez sur un jour pour y créer une commande, ou sur une commande pour ouvrir sa fiche.</p>
+  </main>
+
+  <!-- Alerte mensuelle -->
+  <div class="fond" id="fenetre-mois" hidden>
+    <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-alerte">
+      <div class="fenetre-entete">
+        <h2 id="titre-alerte">Commandes du mois</h2>
+        <button class="fermer" data-fermer aria-label="Fermer">×</button>
+      </div>
+      <div class="fenetre-corps">
+        <p class="sous-titre" id="resume-alerte"></p>
+        <table class="tableau">
+          <thead><tr><th>Date</th><th>Client</th><th>Évènement</th><th>Statut</th></tr></thead>
+          <tbody id="liste-alerte"></tbody>
+        </table>
+      </div>
+      <div class="fenetre-pied"><button class="btn btn-plein" data-fermer>Fermer</button></div>
+    </div>
+  </div>
+
+  <!-- Fiche commande -->
+  <div class="fond" id="fenetre-fiche" hidden>
+    <form class="fenetre fenetre-large" id="fiche" role="dialog" aria-modal="true" aria-labelledby="titre-fiche" novalidate>
+      <div class="fenetre-entete">
+        <h2 id="titre-fiche">Nouvelle commande</h2>
+        <button type="button" class="fermer" id="fiche-fermer" aria-label="Fermer">×</button>
+      </div>
+      <div class="fenetre-corps fiche-corps">
+
+        <section class="bloc">
+          <h3>👤 Client</h3>
+          <div class="champs">
+            <label>Nom *<input name="nom" required autocomplete="off"></label>
+            <label>Prénom<input name="prenom" autocomplete="off"></label>
+            <label>Téléphone<input name="telephone" type="tel" autocomplete="off"></label>
+            <label>E-mail<input name="email" type="email" autocomplete="off"></label>
+          </div>
+        </section>
+
+        <section class="bloc">
+          <h3>📅 Évènement</h3>
+          <div class="champs">
+            <label>Type
+              <select name="type">
+                <option value="mariage">Mariage</option>
+                <option value="bapteme">Baptême</option>
+                <option value="autre">Autre</option>
+              </select>
+            </label>
+            <label class="si-autre">Précisez (anniversaire, deuil…)<input name="typePrecision" autocomplete="off"></label>
+            <label>Date *<input name="date" type="date" required></label>
+            <label>Heure<input name="heure" type="time"></label>
+            <label class="large">Lieu<input name="lieu" autocomplete="off" placeholder="Salle, église, adresse…"></label>
+            <fieldset class="large choix">
+              <legend>Remise des fleurs</legend>
+              <label class="radio"><input type="radio" name="mode" value="livraison" checked> Livraison</label>
+              <label class="radio"><input type="radio" name="mode" value="retrait"> Retrait en magasin</label>
+            </fieldset>
+          </div>
+        </section>
+
+        <section class="bloc">
+          <h3>💐 Demande</h3>
+          <div class="champs">
+            <label class="large">Description<textarea name="description" rows="3" placeholder="Ce que le client souhaite, l'ambiance…"></textarea></label>
+            <label>Fleurs souhaitées<input name="fleurs" autocomplete="off" placeholder="Pivoines, roses, eucalyptus…"></label>
+            <label>Couleurs souhaitées<input name="couleurs" autocomplete="off" placeholder="Blanc, rose poudré…"></label>
+          </div>
+          <div class="compositions">
+            <div class="compositions-titre">Compositions</div>
+            <div id="liste-compositions"></div>
+            <button type="button" class="btn btn-contour btn-petit" id="ajouter-composition">+ Ajouter une composition</button>
+            <datalist id="suggestions-compositions">
+              <option value="Bouquet de mariée"><option value="Boutonnière"><option value="Bouquet de demoiselle d'honneur">
+              <option value="Centre de table"><option value="Arche"><option value="Couronne de fleurs">
+              <option value="Décoration d'église"><option value="Décoration de voiture"><option value="Composition d'entrée">
+              <option value="Bracelet de fleurs"><option value="Gerbe"><option value="Coussin">
+            </datalist>
+          </div>
+        </section>
+
+        <section class="bloc">
+          <h3>📷 Photos d'inspiration du client</h3>
+          <div class="galerie" id="galerie-inspirations"></div>
+          <label class="btn btn-contour btn-petit ajout-photo">+ Ajouter des photos
+            <input type="file" accept="image/*" multiple data-galerie="inspirations" hidden>
+          </label>
+        </section>
+
+        <section class="bloc bloc-moodboard">
+          <h3>🌸 Mon moodboard</h3>
+          <div class="galerie galerie-grande" id="galerie-moodboard"></div>
+          <label class="btn btn-contour btn-petit ajout-photo">+ Ajouter des images
+            <input type="file" accept="image/*" multiple data-galerie="moodboard" hidden>
+          </label>
+          <label class="large">Notes du moodboard<textarea name="moodboardNotes" rows="3" placeholder="Idées, variantes, remarques pour le client…"></textarea></label>
+        </section>
+
+        <section class="bloc">
+          <h3>✅ Suivi</h3>
+          <div class="champs">
+            <label>Statut
+              <select name="statut">
+                <option value="devis">Devis</option>
+                <option value="confirmee">Confirmée</option>
+                <option value="preparation">En préparation</option>
+                <option value="livree">Livrée</option>
+                <option value="annulee">Annulée</option>
+              </select>
+            </label>
+            <label>Prix total (€)<input name="prix" type="number" min="0" step="0.01" inputmode="decimal"></label>
+            <label>Acompte versé (€)<input name="acompte" type="number" min="0" step="0.01" inputmode="decimal"></label>
+            <div class="reste">Reste à payer<strong id="reste-a-payer">–</strong></div>
+            <label class="large">Notes internes<textarea name="notesInternes" rows="3" placeholder="Visible seulement par vous"></textarea></label>
+          </div>
+        </section>
+      </div>
+      <div class="fenetre-pied">
+        <button type="button" class="btn btn-danger" id="fiche-supprimer">Supprimer</button>
+        <span class="espace"></span>
+        <button type="button" class="btn btn-contour" id="fiche-annuler">Annuler</button>
+        <button type="submit" class="btn btn-plein" id="fiche-enregistrer">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Sauvegarde et tablette -->
+  <div class="fond" id="fenetre-sauvegarde" hidden>
+    <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-sauvegarde">
+      <div class="fenetre-entete">
+        <h2 id="titre-sauvegarde">Sauvegarde et tablette</h2>
+        <button class="fermer" data-fermer aria-label="Fermer">×</button>
+      </div>
+      <div class="fenetre-corps">
+        <section class="bloc">
+          <h3>💾 Faire une sauvegarde</h3>
+          <p>Télécharge un fichier contenant toutes vos commandes et toutes les photos. Rangez-le sur une clé USB ou dans OneDrive.</p>
+          <a class="btn btn-plein" href="/api/export" id="btn-exporter">Télécharger la sauvegarde</a>
+        </section>
+        <section class="bloc">
+          <h3>♻️ Restaurer une sauvegarde</h3>
+          <p>Remplace les commandes actuelles par celles du fichier choisi. Une copie de sécurité des commandes actuelles est gardée automatiquement.</p>
+          <label class="btn btn-contour">Choisir un fichier de sauvegarde…
+            <input type="file" accept=".json,application/json" id="fichier-import" hidden>
+          </label>
+        </section>
+        <section class="bloc">
+          <h3>📱 Ouvrir sur la tablette</h3>
+          <p>La tablette doit être sur le même wifi que l'ordinateur, et le calendrier doit être lancé sur l'ordinateur. Tapez cette adresse dans le navigateur de la tablette :</p>
+          <div id="adresses-tablette" class="adresses">…</div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agrandissement d'image -->
+  <div class="visionneuse" id="visionneuse" hidden>
+    <button class="fermer fermer-visionneuse" aria-label="Fermer">×</button>
+    <button class="fleche fleche-gauche" aria-label="Image précédente">‹</button>
+    <img alt="Image agrandie">
+    <button class="fleche fleche-droite" aria-label="Image suivante">›</button>
+    <div class="compteur"></div>
+  </div>
+
+  <div class="message-flottant" id="message-flottant" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
