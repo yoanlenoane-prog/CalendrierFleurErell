@@ -49,20 +49,11 @@ function messageFlottant(texte) {
   messageFlottant.minuteur = setTimeout(() => { el.hidden = true; }, 2600);
 }
 
-async function appel(url, options = {}) {
-  let rep;
-  try { rep = await fetch(url, options); } catch (e) {
-    throw new Error("Impossible de joindre le calendrier. Vérifiez que la fenêtre noire du calendrier est bien ouverte sur l'ordinateur.");
-  }
-  const donnees = await rep.json().catch(() => ({}));
-  if (!rep.ok) throw new Error(donnees.erreur || 'Une erreur est survenue.');
-  return donnees;
-}
 
 /* ---------- Données ---------- */
 
 async function chargerCommandes() {
-  commandes = await appel('/api/commandes');
+  commandes = await Stockage.lireCommandes();
 }
 
 /* ---------- Calendrier ---------- */
@@ -232,7 +223,7 @@ function afficherGaleries() {
     const conteneur = $(`#galerie-${galerie}`);
     conteneur.innerHTML = brouillon[galerie].map((nom, i) => `
       <div class="vignette">
-        <img src="/images/${encodeURIComponent(nom)}" alt="" loading="lazy" data-galerie="${galerie}" data-index="${i}">
+        <img src="${Stockage.urlImage(nom)}" alt="" loading="lazy" data-galerie="${galerie}" data-index="${i}">
         <button type="button" class="retirer" data-galerie="${galerie}" data-index="${i}" title="Retirer cette image" aria-label="Retirer cette image">×</button>
       </div>`).join('');
   }
@@ -273,7 +264,7 @@ async function ajouterImages(galerie, fichiers) {
     envoisEnCours++;
     try {
       const blob = await preparerImage(fichier);
-      const { nom } = await appel('/api/images', { method: 'POST', headers: { 'Content-Type': blob.type || fichier.type }, body: blob });
+      const nom = await Stockage.ajouterImage(blob);
       if (brouillon) brouillon[galerie].push(nom);
     } catch (e) {
       alert(`L'image « ${fichier.name} » n'a pas pu être ajoutée : ${e.message}`);
@@ -301,7 +292,7 @@ async function enregistrerFiche(ev) {
   const bouton = $('#fiche-enregistrer');
   bouton.disabled = true;
   try {
-    await appel(`/api/commandes/${c.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) });
+    await Stockage.enregistrerCommande(c);
     await chargerCommandes();
     fermerFiche(true);
     allerAuMois(dateDepuisCle(c.date), { alerte: cleMois(dateDepuisCle(c.date)) !== cleMois(moisAffiche) });
@@ -317,7 +308,7 @@ async function supprimerFiche() {
   if (!brouillon || !brouillon.id) return;
   if (!confirm(`Supprimer définitivement la commande de ${nomClient(brouillon)} ?\nCette action ne peut pas être annulée.`)) return;
   try {
-    await appel(`/api/commandes/${brouillon.id}`, { method: 'DELETE' });
+    await Stockage.supprimerCommande(brouillon);
     await chargerCommandes();
     fermerFiche(true);
     afficherCalendrier();
@@ -340,7 +331,7 @@ function ouvrirVisionneuse(liste, index) {
 function majVisionneuse() {
   const v = $('#visionneuse');
   const n = visionneuse.liste.length;
-  $('img', v).src = `/images/${encodeURIComponent(visionneuse.liste[visionneuse.index])}`;
+  $('img', v).src = Stockage.urlImage(visionneuse.liste[visionneuse.index]);
   $('.compteur', v).textContent = n > 1 ? `${visionneuse.index + 1} / ${n}` : '';
   $$('.fleche', v).forEach((b) => { b.hidden = n < 2; });
 }
@@ -372,27 +363,52 @@ function rechercher() {
 
 /* ---------- Sauvegarde ---------- */
 
-async function ouvrirSauvegarde() {
+function ouvrirSauvegarde() {
   $('#fenetre-sauvegarde').hidden = false;
+}
+
+async function exporter() {
+  const bouton = $('#btn-exporter');
+  bouton.disabled = true;
   try {
-    const info = await appel('/api/info');
-    $('#adresses-tablette').innerHTML = info.adresses.length
-      ? info.adresses.map((a) => `<code>${echapper(a)}</code>`).join('')
-      : '<p>Aucun réseau wifi détecté sur l’ordinateur.</p>';
+    const donnees = await Stockage.exporter();
+    const blob = new Blob([JSON.stringify(donnees)], { type: 'application/json' });
+    const lien = document.createElement('a');
+    lien.href = URL.createObjectURL(blob);
+    lien.download = `sauvegarde-calendrier-${cleDate(new Date())}.json`;
+    document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+    setTimeout(() => URL.revokeObjectURL(lien.href), 60000);
+    messageFlottant('Sauvegarde téléchargée ✓ (dossier Téléchargements)');
+    majRappelSauvegarde();
   } catch (e) {
-    $('#adresses-tablette').textContent = e.message;
+    alert('La sauvegarde a échoué : ' + e.message);
+  } finally {
+    bouton.disabled = false;
   }
+}
+
+async function majRappelSauvegarde() {
+  const rappel = $('#rappel-sauvegarde');
+  const derniere = await Stockage.derniereSauvegarde();
+  const jours = derniere ? Math.floor((Date.now() - new Date(derniere).getTime()) / 86400000) : null;
+  if (!commandes.length || (jours !== null && jours < 7)) { rappel.hidden = true; return; }
+  $('#rappel-texte').textContent = jours === null
+    ? 'Vous n’avez encore jamais fait de sauvegarde.'
+    : `Votre dernière sauvegarde date de ${jours} jours.`;
+  rappel.hidden = false;
 }
 
 async function importer(fichier) {
   if (!fichier) return;
-  if (!confirm(`Restaurer la sauvegarde « ${fichier.name} » ?\nLes commandes actuelles seront remplacées par celles de ce fichier.`)) return;
+  if (!confirm(`Restaurer la sauvegarde « ${fichier.name} » ?\nToutes les commandes actuelles seront remplacées par celles de ce fichier.`)) return;
   try {
-    const rep = await appel('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: fichier });
+    const nombre = await Stockage.importer(await fichier.text());
     await chargerCommandes();
     $('#fenetre-sauvegarde').hidden = true;
     allerAuMois(moisAffiche, { alerte: false });
-    messageFlottant(`Sauvegarde restaurée : ${rep.nombre} commande${rep.nombre > 1 ? 's' : ''} ✓`);
+    messageFlottant(`Sauvegarde restaurée : ${nombre} commande${nombre > 1 ? 's' : ''} ✓`);
   } catch (e) {
     alert(e.message);
   }
@@ -414,6 +430,8 @@ function brancher() {
     ouvrirFiche(commandeVide(date));
   };
   $('#btn-reglages').onclick = ouvrirSauvegarde;
+  $('#btn-exporter').onclick = exporter;
+  $('#rappel-sauvegarde button').onclick = exporter;
 
   $('#grille').addEventListener('click', (e) => {
     const puce = e.target.closest('.puce');
@@ -511,22 +529,20 @@ function brancher() {
     $('#resultats').hidden = true;
   });
 
-  // Quand on revient sur la page (ex. commande ajoutée depuis la tablette), on rafraîchit.
-  document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState !== 'visible') return;
-    try { await chargerCommandes(); afficherCalendrier(); } catch (e) { /* hors ligne */ }
-  });
   window.addEventListener('beforeunload', (e) => { if (ficheModifiee()) { e.preventDefault(); e.returnValue = ''; } });
 }
 
 async function demarrer() {
   brancher();
   try {
+    await Stockage.demarrer();
     await chargerCommandes();
+    await Stockage.nettoyerImages(commandes);
   } catch (e) {
     alert(e.message);
   }
   allerAuMois(new Date());
+  majRappelSauvegarde();
 }
 
 demarrer();

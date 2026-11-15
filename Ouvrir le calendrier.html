@@ -5,21 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#9E1F3F">
   <title>Calendrier des commandes – Arrosé</title>
-  <link rel="icon" href="logo.png">
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="fichiers/logo.png">
+  <link rel="stylesheet" href="fichiers/style.css">
 </head>
 <body>
   <header class="entete">
-    <img src="logo.png" alt="Arrosé – La cave fleurie" class="logo">
+    <img src="fichiers/logo.png" alt="Arrosé – La cave fleurie" class="logo">
     <div class="recherche">
       <input type="search" id="recherche" placeholder="Rechercher un client…" autocomplete="off" aria-label="Rechercher un client">
       <div id="resultats" class="resultats" hidden></div>
     </div>
     <div class="actions-entete">
-      <button class="btn btn-clair" id="btn-reglages" title="Sauvegarde et tablette">💾 Sauvegarde</button>
+      <button class="btn btn-clair" id="btn-reglages" title="Sauvegarde">💾 Sauvegarde</button>
       <button class="btn btn-blanc" id="btn-nouvelle">+ Nouvelle commande</button>
     </div>
   </header>
+
+  <div class="rappel" id="rappel-sauvegarde" hidden>
+    <span>💾 <span id="rappel-texte"></span> Pensez à en faire une pour ne rien perdre.</span>
+    <button type="button" class="btn btn-plein btn-petit">Faire une sauvegarde maintenant</button>
+  </div>
 
   <main class="principal">
     <div class="barre-mois">
@@ -176,26 +181,27 @@
   <div class="fond" id="fenetre-sauvegarde" hidden>
     <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-sauvegarde">
       <div class="fenetre-entete">
-        <h2 id="titre-sauvegarde">Sauvegarde et tablette</h2>
+        <h2 id="titre-sauvegarde">Sauvegarde</h2>
         <button class="fermer" data-fermer aria-label="Fermer">×</button>
       </div>
       <div class="fenetre-corps">
         <section class="bloc">
           <h3>💾 Faire une sauvegarde</h3>
           <p>Télécharge un fichier contenant toutes vos commandes et toutes les photos. Rangez-le sur une clé USB ou dans OneDrive.</p>
-          <a class="btn btn-plein" href="/api/export" id="btn-exporter">Télécharger la sauvegarde</a>
+          <button type="button" class="btn btn-plein" id="btn-exporter">Télécharger la sauvegarde</button>
         </section>
         <section class="bloc">
           <h3>♻️ Restaurer une sauvegarde</h3>
-          <p>Remplace les commandes actuelles par celles du fichier choisi. Une copie de sécurité des commandes actuelles est gardée automatiquement.</p>
+          <p>Remplace toutes les commandes actuelles par celles du fichier choisi. À utiliser par exemple après un changement d’ordinateur.</p>
           <label class="btn btn-contour">Choisir un fichier de sauvegarde…
             <input type="file" accept=".json,application/json" id="fichier-import" hidden>
           </label>
         </section>
         <section class="bloc">
-          <h3>📱 Ouvrir sur la tablette</h3>
-          <p>La tablette doit être sur le même wifi que l'ordinateur, et le calendrier doit être lancé sur l'ordinateur. Tapez cette adresse dans le navigateur de la tablette :</p>
-          <div id="adresses-tablette" class="adresses">…</div>
+          <h3>ℹ️ Où sont mes données ?</h3>
+          <p>Vos commandes et vos photos sont enregistrées dans votre navigateur, sur cet ordinateur. Elles restent quand vous fermez tout.
+          Attention : si vous effacez les « données de navigation » ou les « cookies et données de site » du navigateur, elles seraient effacées.
+          C'est pour cela qu'il faut faire une sauvegarde régulièrement.</p>
         </section>
       </div>
     </div>
@@ -212,6 +218,8 @@
 
   <div class="message-flottant" id="message-flottant" hidden></div>
 
-  <script src="app.js"></script>
+  <script src="fichiers/exemples.js"></script>
+  <script src="fichiers/stockage.js"></script>
+  <script src="fichiers/app.js"></script>
 </body>
 </html>
