@@ -212,6 +212,7 @@ function ouvrirFiche(commande) {
   majReste();
   $('#fenetre-mois').hidden = true;
   $('#fenetre-fiche').hidden = false;
+  afficherOnglet('demande');
   $('.fiche-corps').scrollTop = 0;
   instantane = JSON.stringify(lireFormulaire());
   if (!brouillon.id) f.elements.nom.focus();
@@ -300,7 +301,7 @@ function afficherGaleries() {
     const conteneur = $(`#galerie-${galerie}`);
     conteneur.innerHTML = brouillon[galerie].map((nom, i) => `
       <div class="vignette">
-        <img src="${Stockage.urlImage(nom)}" alt="" loading="lazy" data-galerie="${galerie}" data-index="${i}">
+        <img src="${Stockage.urlImage(nom)}" alt="" data-galerie="${galerie}" data-index="${i}">
         <button type="button" class="retirer" data-galerie="${galerie}" data-index="${i}" title="Retirer cette image" aria-label="Retirer cette image"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>`).join('');
   }
@@ -364,7 +365,7 @@ async function enregistrerFiche(ev) {
     f.elements[nom].classList.toggle('erreur', !ok);
     if (!ok) manque = true;
   }
-  if (manque) { messageFlottant('Merci de remplir le nom du client et la date.'); return; }
+  if (manque) { afficherOnglet('demande'); messageFlottant('Merci de remplir le nom du client et la date.'); return; }
   c.id ||= nouvelId();
   const bouton = $('#fiche-enregistrer');
   bouton.disabled = true;
@@ -526,16 +527,12 @@ async function enregistrerTypes() {
 }
 
 function afficherGestionTypes() {
-  $('#liste-types').innerHTML = types.map((t) => {
-    const nb = commandes.filter((c) => typeDe(c) === t.id).length;
-    return `
+  $('#liste-types').innerHTML = types.map((t) => `
     <div class="ligne-type" data-id="${echapper(t.id)}">
       <input type="color" value="${echapper(t.couleur)}" data-champ="couleur" aria-label="Couleur de ${echapper(t.nom)}">
       <input value="${echapper(t.nom)}" data-champ="nom" aria-label="Nom du type">
-      <span class="nb-type">${nb} commande${nb > 1 ? 's' : ''}</span>
-      ${t.id === 'autre' ? '<span class="supprimer-type"></span>' : `<button type="button" class="supprimer-type" title="Supprimer ce type" aria-label="Supprimer ce type">${'<svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'}</button>`}
-    </div>`;
-  }).join('');
+      ${t.id === 'autre' ? '<span class="supprimer-type"></span>' : '<button type="button" class="supprimer-type" title="Supprimer ce type" aria-label="Supprimer ce type"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>'}
+    </div>`).join('');
 }
 
 async function supprimerType(id) {
@@ -589,42 +586,108 @@ function enteteImpression(titre, sousTitre) {
 
 function texteMultiligne(t) { return echapper(t).replace(/\n/g, '<br>'); }
 
-function imprimerFiche() {
-  const c = lireFormulaire();
-  const ligne = (libelle, valeur) => (valeur ? `<tr><th>${libelle}</th><td>${valeur}</td></tr>` : '');
-  const compositions = c.compositions.length
+function enTeteClient(c) {
+  return `<div class="imp-client">${echapper(nomClient(c))}</div>
+    <div class="imp-evenement"><span class="imp-type t-${typeDe(c)}">${echapper(libelleType(c))}</span>
+      ${echapper(c.date ? dateLongue(c.date) : '')}${c.heure ? ` à ${echapper(c.heure)}` : ''}${c.lieu ? ` · ${echapper(c.lieu)}` : ''}</div>`;
+}
+const ligneInfo = (libelle, valeur) => (valeur ? `<tr><th>${libelle}</th><td>${valeur}</td></tr>` : '');
+const dateImpression = () => `Imprimée le ${new Date().toLocaleDateString('fr-FR')}`;
+
+function tableauCompositions(c) {
+  return c.compositions.length
     ? `<table class="imp-tableau"><thead><tr><th>Composition</th><th class="nb">Quantité</th></tr></thead><tbody>${c.compositions.map((x) => `<tr><td>${echapper(x.nom)}</td><td class="nb">${echapper(x.quantite)}</td></tr>`).join('')}</tbody></table>`
     : '<p class="imp-vide">Aucune composition renseignée.</p>';
-  const fleurs = c.fleursCommande.length
-    ? `<table class="imp-tableau"><thead><tr><th>Fleur</th><th>Couleur</th><th class="nb">Quantité</th></tr></thead><tbody>${c.fleursCommande.map((x) => `<tr><td>${echapper(x.fleur)}</td><td>${echapper(x.couleur)}</td><td class="nb">${echapper(x.quantite)} ${echapper(x.unite)}</td></tr>`).join('')}</tbody></table>`
-    : '';
-  const images = c.moodboard.slice(0, 6);
-  const html = `<div class="imp-page">
-    ${enteteImpression('Fiche atelier', `Imprimée le ${new Date().toLocaleDateString('fr-FR')}`)}
-    <div class="imp-client">${echapper(nomClient(c))}</div>
-    <div class="imp-evenement"><span class="imp-type t-${typeDe(c)}">${echapper(libelleType(c))}</span>
-      ${echapper(c.date ? dateLongue(c.date) : '')}${c.heure ? ` à ${echapper(c.heure)}` : ''}</div>
+}
+
+function imprimerDemande(c) {
+  const reste = parseFloat(c.prix) ? euros((parseFloat(c.prix) || 0) - (parseFloat(c.acompte) || 0)) : '';
+  const inspirations = c.inspirations.slice(0, 6);
+  return `<div class="imp-page">
+    ${enteteImpression('Demande client', dateImpression())}
+    ${enTeteClient(c)}
     <div class="imp-colonnes">
       <table class="imp-infos">
-        ${ligne('Téléphone', echapper(c.telephone))}
-        ${ligne('E-mail', echapper(c.email))}
-        ${ligne('Lieu', echapper(c.lieu))}
-        ${ligne('Remise', c.mode === 'retrait' ? 'Retrait en magasin' : 'Livraison')}
-        ${ligne('Statut', echapper(STATUTS[c.statut] || ''))}
+        ${ligneInfo('Téléphone', echapper(c.telephone))}
+        ${ligneInfo('E-mail', echapper(c.email))}
+        ${ligneInfo('Lieu', echapper(c.lieu))}
+        ${ligneInfo('Remise', c.mode === 'retrait' ? 'Retrait en magasin' : 'Livraison')}
       </table>
       <table class="imp-infos">
-        ${ligne('Fleurs', echapper(c.fleurs))}
-        ${ligne('Couleurs', echapper(c.couleurs))}
-        ${ligne('Demande', texteMultiligne(c.description))}
+        ${ligneInfo('Statut', echapper(STATUTS[c.statut] || ''))}
+        ${ligneInfo('Prix', c.prix ? euros(c.prix) : '')}
+        ${ligneInfo('Acompte', c.acompte ? euros(c.acompte) : '')}
+        ${ligneInfo('Reste à payer', reste)}
       </table>
     </div>
-    <h2>Compositions</h2>${compositions}
-    ${fleurs ? `<h2>Fleurs à commander</h2>${fleurs}` : ''}
-    ${images.length ? `<h2>Moodboard</h2><div class="imp-galerie">${images.map((n) => `<img src="${Stockage.urlImage(n)}" alt="">`).join('')}</div>` : ''}
-    ${c.moodboardNotes ? `<h2>Notes du moodboard</h2><p>${texteMultiligne(c.moodboardNotes)}</p>` : ''}
+    <h2>Demande</h2>
+    <table class="imp-infos">
+      ${ligneInfo('Description', texteMultiligne(c.description))}
+      ${ligneInfo('Fleurs', echapper(c.fleurs))}
+      ${ligneInfo('Couleurs', echapper(c.couleurs))}
+    </table>
+    <h2>Compositions</h2>${tableauCompositions(c)}
+    ${inspirations.length ? `<h2>Photos d'inspiration</h2><div class="imp-galerie imp-galerie-petite">${inspirations.map((n) => `<img src="${Stockage.urlImage(n)}" alt="">`).join('')}</div>` : ''}
     ${c.notesInternes ? `<h2>Notes internes</h2><p>${texteMultiligne(c.notesInternes)}</p>` : ''}
   </div>`;
+}
+
+function imprimerMoodboard(c) {
+  return `<div class="imp-page">
+    ${enteteImpression('Moodboard', dateImpression())}
+    ${enTeteClient(c)}
+    ${c.moodboard.length ? `<div class="imp-galerie imp-galerie-grande">${c.moodboard.slice(0, 9).map((n) => `<img src="${Stockage.urlImage(n)}" alt="">`).join('')}</div>` : '<p class="imp-vide">Aucune image dans le moodboard.</p>'}
+    ${c.moodboardNotes ? `<h2>Notes</h2><p>${texteMultiligne(c.moodboardNotes)}</p>` : ''}
+  </div>`;
+}
+
+function imprimerCommande(c) {
+  const fleurs = c.fleursCommande.length
+    ? `<table class="imp-tableau"><thead><tr><th>Fleur</th><th>Couleur</th><th class="nb">Quantité</th></tr></thead><tbody>${c.fleursCommande.map((x) => `<tr><td>${echapper(majuscule(x.fleur))}</td><td>${echapper(majuscule(x.couleur))}</td><td class="nb">${echapper(x.quantite)} ${echapper(x.unite)}</td></tr>`).join('')}</tbody></table>`
+    : '<p class="imp-vide">Aucune fleur renseignée.</p>';
+  return `<div class="imp-page">
+    ${enteteImpression('Commande fleuriste', dateImpression())}
+    ${enTeteClient(c)}
+    <h2>Fleurs à commander</h2>${fleurs}
+    <h2>Compositions à réaliser</h2>${tableauCompositions(c)}
+    ${c.fleurs || c.couleurs ? `<h2>Souhaits du client</h2><table class="imp-infos">${ligneInfo('Fleurs', echapper(c.fleurs))}${ligneInfo('Couleurs', echapper(c.couleurs))}</table>` : ''}
+  </div>`;
+}
+
+function imprimerFiche() {
+  const c = lireFormulaire();
+  const html = { demande: imprimerDemande, moodboard: imprimerMoodboard, commande: imprimerCommande }[ongletActif](c);
   imprimer(html);
+}
+
+/* ---------- Onglets de la fiche ---------- */
+
+let ongletActif = 'demande';
+const LIBELLES_IMPRESSION = { demande: 'Imprimer la demande', moodboard: 'Imprimer le moodboard', commande: 'Imprimer la commande' };
+
+function afficherOnglet(nom) {
+  ongletActif = nom;
+  for (const b of $$('#fiche .onglet')) {
+    const actif = b.dataset.onglet === nom;
+    b.classList.toggle('actif', actif);
+    b.setAttribute('aria-selected', String(actif));
+  }
+  for (const p of $$('#fiche .panneau')) p.hidden = p.dataset.panneau !== nom;
+  $('#texte-imprimer').textContent = LIBELLES_IMPRESSION[nom];
+  $('.fiche-corps').scrollTop = 0;
+  if (nom === 'commande') majRappelCommande();
+}
+
+function majRappelCommande() {
+  const c = lireFormulaire();
+  const comp = c.compositions.length
+    ? `<ul>${c.compositions.map((x) => `<li><strong>${echapper(x.quantite || '–')}</strong> × ${echapper(x.nom)}</li>`).join('')}</ul>`
+    : '<p class="aide">Aucune composition saisie dans la demande client.</p>';
+  $('#rappel-commande').innerHTML = `
+    <p><span class="etiquette-rappel">Évènement</span>${echapper(libelleType(c))}${c.date ? ` · ${echapper(dateLongue(c.date))}` : ''}</p>
+    ${c.fleurs ? `<p><span class="etiquette-rappel">Fleurs souhaitées</span>${echapper(c.fleurs)}</p>` : ''}
+    ${c.couleurs ? `<p><span class="etiquette-rappel">Couleurs</span>${echapper(c.couleurs)}</p>` : ''}
+    <p><span class="etiquette-rappel">Compositions</span></p>${comp}`;
 }
 
 /* ---------- Fleurs à commander pour la semaine ---------- */
@@ -711,6 +774,7 @@ function brancher() {
     if (li) { $('#fenetre-fleurs').hidden = true; ouvrirFicheParId(li.dataset.id); }
   });
   $('#fiche-imprimer').onclick = imprimerFiche;
+  $('#fiche').addEventListener('click', (e) => { const o = e.target.closest('.onglet'); if (o) afficherOnglet(o.dataset.onglet); });
   $('#ajouter-fleur').onclick = () => ajouterLigneFleur().querySelector('input').focus();
   $('#liste-types').addEventListener('change', async (e) => {
     const ligne = e.target.closest('.ligne-type');

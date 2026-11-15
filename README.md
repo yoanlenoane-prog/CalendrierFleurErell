@@ -69,10 +69,13 @@ une sauvegarde avant.
   Le mois tient sur un seul écran : si un jour a trop de commandes, cliquez sur « + N autres ».
   Une commande annulée apparaît barrée.
 - **Nouvelle commande** : cliquez sur un jour, ou Menu → « Nouvelle commande ».
-- **Fiche** : cliquez sur une commande. Cliquez sur une photo pour l'agrandir (flèches pour passer à la suivante).
-  Le bouton **Imprimer la fiche** sort une page A4 pour l'atelier (client, évènement, compositions, fleurs, moodboard, notes).
-- **Fleurs à commander** : dans chaque fiche, la partie « Fleurs à commander chez le grossiste » (fleur, couleur,
-  quantité, tiges/bottes/pots). Menu → « Fleurs à commander » additionne toutes les commandes de la semaine
+- **Fiche** : cliquez sur une commande. Elle a trois onglets :
+  - **Demande client** : coordonnées, évènement, demande, compositions, photos d'inspiration, suivi et prix ;
+  - **Moodboard** : vos images (cliquez pour agrandir) et vos notes ;
+  - **Commande fleuriste** : les fleurs à commander chez le grossiste (fleur, couleur, quantité en tiges, bottes ou pots),
+    avec un rappel de la demande.
+  Le bouton **Imprimer** imprime l'onglet affiché (page A4).
+- **Fleurs à commander** : Menu → « Fleurs à commander » additionne les fleurs de toutes les commandes de la semaine
   (flèches pour changer de semaine) et peut s'imprimer. Les commandes sans liste détaillée sont signalées « à préciser ».
 - **Types d'évènements** : Menu → « Types d'évènements » pour changer un nom ou une couleur, ou ajouter vos propres types.
   Si vous supprimez un type, ses commandes passent en « Autre » en gardant le nom en précision.

@@ -139,8 +139,14 @@
         </div>
         <button type="button" class="fermer" id="fiche-fermer" aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
+      <div class="onglets" role="tablist" aria-label="Parties de la fiche">
+        <button type="button" class="onglet actif" role="tab" data-onglet="demande" aria-selected="true">Demande client</button>
+        <button type="button" class="onglet" role="tab" data-onglet="moodboard" aria-selected="false">Moodboard</button>
+        <button type="button" class="onglet" role="tab" data-onglet="commande" aria-selected="false">Commande fleuriste</button>
+      </div>
       <div class="fenetre-corps fiche-corps">
 
+        <div class="panneau" data-panneau="demande" role="tabpanel">
         <section class="bloc">
           <h3>Client</h3>
           <div class="champs">
@@ -186,17 +192,6 @@
               <option value="Dessus de cercueil"><option value="Raquette"><option value="Bouquet rond">
             </datalist>
           </div>
-          <div class="compositions">
-            <div class="compositions-titre">Fleurs à commander chez le grossiste</div>
-            <div id="liste-fleurs"></div>
-            <button type="button" class="btn btn-contour btn-petit" id="ajouter-fleur">Ajouter une fleur</button>
-            <datalist id="suggestions-fleurs">
-              <option value="Rose"><option value="Rose de jardin"><option value="Pivoine"><option value="Renoncule"><option value="Lisianthus">
-              <option value="Gypsophile"><option value="Eucalyptus"><option value="Hortensia"><option value="Dahlia"><option value="Chrysanthème">
-              <option value="Lys"><option value="Tulipe"><option value="Anémone"><option value="Delphinium"><option value="Alstroemeria">
-              <option value="Œillet"><option value="Freesia"><option value="Astilbe"><option value="Ruscus"><option value="Pittosporum">
-            </datalist>
-          </div>
         </section>
 
         <section class="bloc">
@@ -205,15 +200,6 @@
           <label class="btn btn-contour btn-petit ajout-photo">Ajouter des photos
             <input type="file" accept="image/*" multiple data-galerie="inspirations" hidden>
           </label>
-        </section>
-
-        <section class="bloc bloc-moodboard">
-          <h3>Mon moodboard</h3>
-          <div class="galerie galerie-grande" id="galerie-moodboard"></div>
-          <label class="btn btn-contour btn-petit ajout-photo">Ajouter des images
-            <input type="file" accept="image/*" multiple data-galerie="moodboard" hidden>
-          </label>
-          <label class="large">Notes du moodboard<textarea name="moodboardNotes" rows="3" placeholder="Idées, variantes, remarques pour le client…"></textarea></label>
         </section>
 
         <section class="bloc">
@@ -234,11 +220,46 @@
             <label class="large">Notes internes<textarea name="notesInternes" rows="3" placeholder="Visible seulement par vous"></textarea></label>
           </div>
         </section>
+        </div>
+
+        <div class="panneau" data-panneau="moodboard" role="tabpanel" hidden>
+        <section class="bloc bloc-moodboard">
+          <h3>Mon moodboard</h3>
+          <div class="galerie galerie-grande" id="galerie-moodboard"></div>
+          <label class="btn btn-contour btn-petit ajout-photo">Ajouter des images
+            <input type="file" accept="image/*" multiple data-galerie="moodboard" hidden>
+          </label>
+          <label class="large">Notes du moodboard<textarea name="moodboardNotes" rows="3" placeholder="Idées, variantes, remarques pour le client…"></textarea></label>
+        </section>
+        </div>
+
+        <div class="panneau" data-panneau="commande" role="tabpanel" hidden>
+        <section class="bloc">
+          <h3>Fleurs à commander chez le grossiste</h3>
+          <p class="aide">Ces quantités sont additionnées avec celles des autres commandes dans Menu → Fleurs à commander.</p>
+          <div class="compositions compositions-sans-marge">
+            
+            <div id="liste-fleurs"></div>
+            <button type="button" class="btn btn-contour btn-petit" id="ajouter-fleur">Ajouter une fleur</button>
+            <datalist id="suggestions-fleurs">
+              <option value="Rose"><option value="Rose de jardin"><option value="Pivoine"><option value="Renoncule"><option value="Lisianthus">
+              <option value="Gypsophile"><option value="Eucalyptus"><option value="Hortensia"><option value="Dahlia"><option value="Chrysanthème">
+              <option value="Lys"><option value="Tulipe"><option value="Anémone"><option value="Delphinium"><option value="Alstroemeria">
+              <option value="Œillet"><option value="Freesia"><option value="Astilbe"><option value="Ruscus"><option value="Pittosporum">
+            </datalist>
+          </div>
+        </section>
+
+        <section class="bloc">
+          <h3>Rappel de la demande</h3>
+          <div id="rappel-commande" class="rappel-commande"></div>
+        </section>
+        </div>
       </div>
       <div class="fenetre-pied">
         <button type="button" class="btn btn-danger" id="fiche-supprimer">Supprimer</button>
         <button type="button" class="btn btn-contour" id="fiche-imprimer">
-          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer la fiche</button>
+          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg><span id="texte-imprimer">Imprimer la demande</span></button>
         <span class="espace"></span>
         <button type="button" class="btn btn-contour" id="fiche-annuler">Annuler</button>
         <button type="submit" class="btn btn-plein" id="fiche-enregistrer">Enregistrer</button>
