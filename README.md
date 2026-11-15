@@ -12,23 +12,23 @@ Il fonctionne sur un seul ordinateur, sans Internet et sans rien installer : il 
 
 ### 1. Installation (une seule fois)
 
-1. Allez sur <https://github.com/yoanlenoane-prog/CalendrierFleurErell> (connectez-vous à GitHub si on vous le demande,
-   car le dépôt est privé).
-2. Cliquez sur le bouton vert **< > Code**, puis sur **Download ZIP** (tout en bas de la petite fenêtre).
-3. Ouvrez votre dossier **Téléchargements**, faites un clic droit sur le fichier `CalendrierFleurErell-main.zip`,
-   puis **Extraire tout…** → **Extraire**.
-4. Déplacez le dossier obtenu `CalendrierFleurErell-main` dans **Documents** (vous pouvez le renommer, par exemple
-   « Calendrier Arrosé »).
+Tout le calendrier tient dans **un seul fichier** : `Calendrier Arrose.html`.
 
-Astuce : dans ce dossier, faites un clic droit sur **Ouvrir le calendrier** → **Afficher plus d'options** →
-**Envoyer vers** → **Bureau (créer un raccourci)**. Vous l'aurez ainsi sur le bureau.
+1. Ouvrez ce lien (connectez-vous à GitHub si on vous le demande, car le dépôt est privé) :
+   <https://github.com/yoanlenoane-prog/CalendrierFleurErell/blob/main/Calendrier%20Arrose.html>
+2. En haut à droite du contenu du fichier, cliquez sur le bouton **Download raw file**
+   (la petite flèche vers le bas ⤓).
+3. Le fichier `Calendrier Arrose.html` arrive dans vos **Téléchargements**. Déplacez-le dans **Documents**.
+
+Astuce : faites un clic droit sur le fichier → **Afficher plus d'options** → **Envoyer vers** →
+**Bureau (créer un raccourci)**. Vous l'aurez ainsi sur le bureau.
 
 ### 2. Ouvrir le calendrier (chaque jour)
 
-Double-cliquez sur **Ouvrir le calendrier** (ou sur son raccourci du bureau). Le calendrier s'ouvre dans votre navigateur.
+Double-cliquez sur **Calendrier Arrose** (ou sur son raccourci du bureau). Le calendrier s'ouvre dans votre navigateur.
 
 Ouvrez-le **toujours avec le même navigateur** (par exemple toujours Edge) : c'est lui qui garde vos commandes.
-Si le fichier s'ouvre avec un autre navigateur : clic droit sur **Ouvrir le calendrier** → **Ouvrir avec** → choisissez
+Si le fichier s'ouvre avec un autre navigateur : clic droit sur le fichier → **Ouvrir avec** → choisissez
 **Microsoft Edge** (ou Chrome) et cochez « Toujours utiliser cette application ».
 
 ### 3. Où sont enregistrées mes commandes ?
@@ -55,8 +55,8 @@ par un bandeau jaune si votre dernière sauvegarde a plus de 7 jours.
 
 ### 6. Installer une nouvelle version
 
-Si je modifie le calendrier, refaites l'étape 1 et remplacez l'ancien dossier par le nouveau.
-Vos commandes ne sont pas dans le dossier mais dans le navigateur : elles restent. Par sécurité, faites quand même
+Si je modifie le calendrier, refaites l'étape 1 et remplacez l'ancien fichier par le nouveau.
+Vos commandes ne sont pas dans le fichier mais dans le navigateur : elles restent. Par sécurité, faites quand même
 une sauvegarde avant.
 
 ---
@@ -73,7 +73,8 @@ une sauvegarde avant.
 
 ## Pour information (technique)
 
-- `Ouvrir le calendrier.html` : la page de l'application.
-- `fichiers/` : style, logo, code (`app.js`), enregistrement dans le navigateur avec IndexedDB (`stockage.js`)
-  et commandes d'exemple installées au tout premier lancement (`exemples.js`).
+- `Calendrier Arrose.html` : l'application complète, autonome (styles, code, logo et exemples inclus).
+  **Ne pas modifier à la main** : ce fichier est fabriqué par `node assembler.js` à partir du dossier `sources/`.
+- `sources/` : `page.html`, `style.css`, `app.js`, `stockage.js` (enregistrement dans le navigateur avec IndexedDB),
+  `exemples.js` (commandes d'exemple installées au tout premier lancement) et `logo.png`.
 - Aucune dépendance, aucun serveur, aucune donnée envoyée sur Internet.
