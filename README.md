@@ -95,13 +95,18 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
   - **Commande fleuriste** : les fleurs à commander chez le grossiste (fleur, couleur, quantité en tiges, bottes ou pots),
     avec un rappel de la demande.
   Le bouton **Imprimer** imprime l'onglet affiché (page A4).
-- **Étapes de suivi** : en haut de chaque fiche, cochez au fur et à mesure **Premier rendez-vous**, **Moodboard envoyé**,
-  **Devis envoyé** et **Validation client**. La date du jour se met toute seule et peut être modifiée.
-  Quand vous cochez « Validation client », une commande au statut « Devis » passe en « Confirmée ».
-- **Liste de tâches** : Menu → « Liste de tâches » range tous les évènements à venir selon ce qu'il reste à faire
-  (premier rendez-vous, moodboard à envoyer, devis à envoyer, en attente de réponse du client, validés), avec la date
-  du dernier envoi. Le choix « Évènements » en haut permet de n'afficher qu'un type (par exemple les mariages).
-  Cliquez sur une ligne pour ouvrir la fiche. La liste peut s'imprimer.
+- **Suivi** (colonne de gauche de chaque fiche) : cochez au fur et à mesure **1. Premier rendez-vous**,
+  **2. Moodboard envoyé**, **3. Devis envoyé** et **4. Validation client**. Une étape cochée affiche « Fait le » et la date
+  du jour, que vous pouvez modifier ; une étape non cochée affiche « À faire ». Quand vous cochez « Validation client »,
+  une commande au statut « Devis » passe en « Confirmée ».
+  Cochez **Le client a répondu** quand le client vous répond (vous pouvez noter ce qu'il demande) : la commande passe
+  « En attente de ma part ». Elle se décoche toute seule quand vous cochez l'envoi suivant.
+- **Liste de tâches** : Menu → « Liste de tâches » s'affiche en pleine page, en quatre colonnes :
+  **Nouvelles demandes** (aucune étape cochée : rendez-vous à fixer), **En attente de ma part** (moodboard à envoyer,
+  ou le client a répondu), **En attente du client** (moodboard ou devis envoyé) et **Validés**.
+  Un envoi sans réponse depuis 7 jours passe en rouge « à relancer » (nombre de jours réglable en haut de la page).
+  Le choix « Évènements » n'affiche qu'un type, par exemple les mariages. Cliquez sur une carte pour ouvrir la fiche.
+  La liste peut s'imprimer. « Retour au calendrier » ramène au calendrier.
 - **PDF dans le moodboard** : le bouton « Ajouter des images ou des PDF » accepte aussi les PDF. Cliquez sur un PDF
   pour l'ouvrir dans un nouvel onglet. Les PDF sont inclus dans les sauvegardes.
 - **Fleurs à commander** : Menu → « Fleurs à commander » additionne les fleurs de toutes les commandes de la semaine

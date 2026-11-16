@@ -450,31 +450,44 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
 .lien { background: none; border: 0; padding: 0; font: inherit; color: var(--framboise); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .lien:hover { color: var(--framboise-fonce); }
 
-/* ---------- Étapes de suivi (fiche) ---------- */
+/* ---------- Étapes de suivi (colonne de gauche de la fiche) ---------- */
+.fiche-cadre { flex: 1; min-height: 0; display: flex; }
+.fiche-droite { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+.fiche-droite .fiche-corps { flex: 1; min-height: 0; }
 .avancement {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex: none;
-  padding: 10px 24px; background: var(--papier); border-bottom: 1px solid var(--trait);
+  width: 232px; flex: none; overflow-y: auto; background: var(--papier); border-right: 1px solid var(--trait);
+  padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 0;
 }
-.etapes { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
-.etape {
-  display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 10px; border: 1px solid var(--trait);
-  border-radius: 8px; background: var(--creme); min-width: 150px; flex: 1; min-height: 58px;
+.avancement-titre { font-size: 11.5px; text-transform: uppercase; letter-spacing: .14em; font-weight: 600; color: var(--framboise); margin-bottom: 10px; }
+.etapes { display: flex; flex-direction: column; }
+.etape { position: relative; padding: 0 0 16px 0; }
+.etape:not(:last-child)::before { content: ""; position: absolute; left: 10px; top: 24px; bottom: 2px; width: 2px; background: var(--trait-fort); }
+.etape.faite:not(:last-child)::before { background: #3E7A3A; }
+.etape-case { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; cursor: pointer; color: var(--texte); font-size: 14.5px; font-weight: 500; }
+.etape-case input[type=checkbox] {
+  appearance: auto; -webkit-appearance: checkbox; width: 22px; height: 22px; min-height: 0; margin: 0; padding: 0; flex: none;
+  accent-color: #3E7A3A; cursor: pointer; position: relative; z-index: 1; background: #fff;
 }
-.etape.faite { border-color: var(--framboise); background: var(--framboise-pale); }
-.etape-case { display: flex; flex-direction: row; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--texte-doux); }
-.etape-case input { position: absolute; opacity: 0; pointer-events: none; }
-.etape-rond {
-  width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--trait-fort); flex: none;
-  display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: var(--texte-doux);
+.etape-num { color: var(--texte-doux); }
+.etape-nom { line-height: 22px; }
+.etape-etat { margin: 2px 0 0 32px; font-size: 13px; }
+.etat-a-faire { color: var(--texte-doux); font-style: italic; }
+.etat-fait { display: none; color: #2F6A2C; font-weight: 500; align-items: center; gap: 4px; flex-wrap: wrap; }
+.etape.faite .etat-a-faire { display: none; }
+.etape.faite .etat-fait { display: inline-flex; }
+.etape.faite .etape-nom { color: #2F6A2C; }
+.etape input[type=date], .reponse-client input[type=date] {
+  font: inherit; font-size: 13px; padding: 1px 4px; min-height: 0; width: auto; border: 1px solid var(--trait-fort); border-radius: 4px; background: #fff; color: var(--texte);
 }
-.etape.faite .etape-case { color: var(--framboise); }
-.etape.faite .etape-rond { background: var(--framboise); border-color: var(--framboise); color: #fff; font-size: 0; }
-.etape.faite .etape-rond::after { content: ""; width: 9px; height: 5px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
-.etape-case input:focus-visible + .etape-rond { outline: 2px solid var(--framboise); outline-offset: 2px; }
-.etape input[type=date] { align-self: flex-start; font: inherit; font-size: 12.5px; padding: 1px 4px; min-height: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--texte); margin-left: 26px; width: auto; }
-.etape input[type=date]:hover, .etape input[type=date]:focus { border-color: var(--trait-fort); background: #fff; }
-.statut-fiche { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: var(--texte-doux); }
-.statut-fiche select { width: auto; }
+.reponse-client { margin-top: 4px; padding: 12px; border: 1px dashed var(--trait-fort); border-radius: 8px; background: var(--creme); }
+.reponse-client.faite { border: 1px solid #B7A6D4; background: #F3EFF9; }
+.reponse-client.faite .etape-nom { color: #5B4886; }
+.reponse-detail { display: none; flex-direction: column; gap: 6px; margin: 8px 0 0 32px; font-size: 13px; color: #5B4886; }
+.reponse-client.faite .reponse-detail { display: flex; }
+.reponse-detail input:not([type=date]) { font-size: 13px; padding: 5px 8px; min-height: 0; }
+.aide-etapes { font-size: 12px; color: var(--texte-doux); margin: 8px 0 0; line-height: 1.4; }
+.statut-fiche { margin-top: 16px; font-size: 12.5px; }
+.statut-fiche select { font-size: 14px; }
 
 /* ---------- PDF dans le moodboard ---------- */
 .vignette-pdf { background: #fff; border: 1px solid var(--trait-fort); }
@@ -488,22 +501,48 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
 .pdf-nom { font-size: 12.5px; line-height: 1.3; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .pdf-ouvrir { font-size: 12px; color: var(--texte-doux); text-decoration: underline; }
 
-/* ---------- Liste de tâches ---------- */
-.filtre-taches { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: var(--texte-doux); margin-right: 6px; }
-.filtre-taches select { width: auto; }
-.groupe-taches + .groupe-taches { margin-top: 18px; }
-.groupe-taches h3 { font-family: var(--serif); font-size: 21px; color: var(--framboise); font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
-.groupe-taches .compte { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--texte-doux); background: var(--papier); border: 1px solid var(--trait); border-radius: 10px; padding: 1px 8px; }
-.groupe-attente h3 { color: #8E5219; }
-.groupe-valide h3 { color: #2F6A2C; }
-.tableau-taches { table-layout: fixed; }
-.tableau-taches td:first-child { width: 150px; }
-.tableau-taches td:nth-child(2), .tableau-taches td:nth-child(3) { width: 25%; overflow: hidden; text-overflow: ellipsis; }
-.derniere-etape { color: var(--texte-doux); font-size: 13.5px; }
-.vide-groupe { color: var(--texte-doux); font-size: 13.5px; font-style: italic; margin: 2px 0 0; }
-.aide-pied { font-size: 13px; color: var(--texte-doux); }
-#zone-impression .groupe-taches h3 { font-size: 16px; }
-#zone-impression .compte { border: 0; }
+/* ---------- Liste de tâches (pleine page) ---------- */
+.page-taches { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 14px 24px 18px; gap: 12px; }
+.page-taches[hidden], .principal[hidden] { display: none; }
+.barre-taches { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.barre-taches h1 { font-family: var(--serif); font-size: 34px; font-weight: 600; color: var(--framboise); margin: 0; }
+.barre-taches .btn .icone { width: 16px; height: 16px; }
+.reglage-taches { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: var(--texte-doux); }
+.reglage-taches select { width: auto; }
+.reglage-taches input { width: 64px !important; text-align: center; }
+.colonnes-taches { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.colonne-tache { background: #F2ECE6; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
+.colonne-tache h2 { font-family: var(--serif); font-weight: 600; font-size: 23px; display: flex; align-items: center; gap: 10px; padding: 2px 4px; margin: 0; }
+.aide-colonne { font-size: 12.5px; color: var(--texte-doux); padding: 0 4px; margin: 0 0 10px; }
+.colonne-nouvelles h2 { color: var(--framboise); }
+.colonne-moi h2 { color: #8E5219; }
+.colonne-client h2 { color: #2E5A86; }
+.colonne-valide h2 { color: #2F6A2C; }
+.compte { font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--texte-doux); background: #fff; border-radius: 10px; padding: 1px 8px; }
+.cartes { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 1px; }
+.carte-tache {
+  display: flex; flex-direction: column; align-items: stretch; text-align: left; font: inherit; color: var(--texte); cursor: pointer;
+  background: #fff; border: 0; border-left: 4px solid var(--trait-type); border-radius: 8px; padding: 11px 13px; box-shadow: 0 1px 2px rgba(60,20,30,.06);
+}
+.carte-tache:hover { box-shadow: 0 2px 10px rgba(60,20,30,.12); }
+.carte-ligne { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; }
+.carte-ligne strong { font-weight: 500; }
+.carte-date { font-size: 13px; color: var(--texte-doux); white-space: nowrap; }
+.carte-type { font-size: 13px; color: var(--texte-doux); margin-top: 2px; }
+.carte-etat { font-size: 13px; margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--trait); }
+.carte-tache.relance { border-left-color: #B3261E; background: #FDF1F0; }
+.carte-tache.relance .carte-etat { color: #A3262B; font-weight: 500; border-top-color: #F2D3D1; }
+.etiquette-tache { align-self: flex-start; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; margin-bottom: 5px; }
+.m-moi { background: #FBE9D2; color: #8E5219; }
+.m-rep { background: #E8E0F2; color: #5B4886; }
+.vide-groupe { color: var(--texte-doux); font-size: 13.5px; font-style: italic; margin: 2px 4px 0; }
+.groupe-taches + .groupe-taches { margin-top: 10pt; }
+#zone-impression .groupe-taches h3 { font-family: var(--serif); font-size: 15px; color: var(--framboise); margin: 0 0 4pt; }
+@media (max-width: 900px) {
+  .colonnes-taches { grid-template-columns: repeat(2, minmax(0, 1fr)); overflow-y: auto; }
+  .fiche-cadre { flex-direction: column; overflow-y: auto; }
+  .avancement { width: auto; border-right: 0; border-bottom: 1px solid var(--trait); }
+}
 
 </style>
 </head>
@@ -606,6 +645,20 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
     </div>
   </main>
 
+  <!-- Liste de tâches (pleine page, à la place du calendrier) -->
+  <section class="page-taches" id="page-taches" hidden>
+    <div class="barre-taches">
+      <button type="button" class="btn btn-contour" id="taches-retour"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Retour au calendrier</button>
+      <h1>Liste de tâches</h1>
+      <span class="espace"></span>
+      <label class="reglage-taches">Relance après <input type="number" id="delai-relance" min="1" max="90" step="1"> jours</label>
+      <label class="reglage-taches">Évènements <select id="filtre-taches"></select></label>
+      <button type="button" class="btn btn-contour" id="imprimer-taches">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer</button>
+    </div>
+    <div class="colonnes-taches" id="contenu-taches"></div>
+  </section>
+
   <!-- Liste des commandes (alerte mensuelle, ou commandes d'un jour) -->
   <div class="fond" id="fenetre-mois" hidden>
     <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-alerte">
@@ -640,8 +693,18 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
         </div>
         <button type="button" class="fermer" id="fiche-fermer" aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
-      <div class="avancement" id="avancement">
+      <div class="fiche-cadre">
+      <aside class="avancement" id="avancement" aria-label="Suivi de la commande">
+        <div class="avancement-titre">Suivi</div>
         <div class="etapes" id="etapes"></div>
+        <div class="reponse-client" id="reponse-client">
+          <label class="etape-case"><input type="checkbox" id="reponse-case"><span class="etape-nom">Le client a répondu</span></label>
+          <div class="reponse-detail">
+            <span class="reponse-le">le <input type="date" id="reponse-date" aria-label="Date de la réponse du client"></span>
+            <input id="reponse-note" placeholder="Ce qu'il demande…" aria-label="Ce que demande le client">
+          </div>
+          <p class="aide-etapes">À cocher quand le client vous répond : la commande passe «&nbsp;En attente de ma part&nbsp;». Décochez quand vous lui avez répondu.</p>
+        </div>
         <label class="statut-fiche">Statut
           <select name="statut">
             <option value="devis">Devis</option>
@@ -651,7 +714,8 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
             <option value="annulee">Annulée</option>
           </select>
         </label>
-      </div>
+      </aside>
+      <div class="fiche-droite">
       <div class="onglets" role="tablist" aria-label="Parties de la fiche">
         <button type="button" class="onglet actif" role="tab" data-onglet="demande" aria-selected="true">Demande client</button>
         <button type="button" class="onglet" role="tab" data-onglet="moodboard" aria-selected="false">Moodboard</button>
@@ -760,6 +824,8 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
         </section>
         </div>
       </div>
+      </div>
+      </div>
       <div class="fenetre-pied">
         <button type="button" class="btn btn-danger" id="fiche-supprimer">Supprimer</button>
         <button type="button" class="btn btn-contour" id="fiche-imprimer">
@@ -830,31 +896,6 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
   </div>
 
   <!-- Fleurs à commander -->
-  <div class="fond" id="fenetre-taches" hidden>
-    <div class="fenetre fenetre-large" role="dialog" aria-modal="true" aria-labelledby="titre-taches">
-      <div class="fenetre-entete">
-        <div>
-          <h2 id="titre-taches">Liste de tâches</h2>
-          <p class="sous-titre" id="resume-taches"></p>
-        </div>
-        <div class="navigation">
-          <label class="filtre-taches">Évènements
-            <select id="filtre-taches"></select>
-          </label>
-          <button class="fermer" data-fermer aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-        </div>
-      </div>
-      <div class="fenetre-corps" id="contenu-taches"></div>
-      <div class="fenetre-pied">
-        <span class="aide-pied">Cliquez sur une ligne pour ouvrir la fiche et cocher l'étape suivante.</span>
-        <span class="espace"></span>
-        <button class="btn btn-contour" id="imprimer-taches">
-          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer</button>
-        <button class="btn btn-plein" data-fermer>Fermer</button>
-      </div>
-    </div>
-  </div>
-
   <div class="fond" id="fenetre-fleurs" hidden>
     <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-fleurs">
       <div class="fenetre-entete">
@@ -1021,6 +1062,7 @@ const Stockage = (() => {
       types: await idbLire('reglages', 'types'),
       derniereSauvegarde: await idbLire('reglages', 'derniereSauvegarde'),
       initialise: await idbLire('reglages', 'initialise'),
+      delaiRelance: await idbLire('reglages', 'delaiRelance'),
     };
     images.clear();
     await new Promise((resolve, reject) => {
@@ -1090,7 +1132,7 @@ const Stockage = (() => {
         await ecrireFichier(dossier, 'reglages.json', JSON.stringify(reglages, null, 2));
       } else {
         await transaction(['reglages'], 'readwrite', (tx) => {
-          for (const cle of ['types', 'derniereSauvegarde', 'initialise']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
+          for (const cle of ['types', 'derniereSauvegarde', 'initialise', 'delaiRelance']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
         });
       }
     });
@@ -1310,6 +1352,8 @@ const Stockage = (() => {
     },
 
     async derniereSauvegarde() { return reglages.derniereSauvegarde || null; },
+    lireReglage(cle) { return reglages[cle] ?? null; },
+    async ecrireReglage(cle, valeur) { reglages[cle] = valeur; await persisterReglages(); },
     async lireTypes() { return reglages.types || null; },
     async ecrireTypes(types) { reglages.types = copie(types); await persisterReglages(); },
   };
@@ -1512,7 +1556,7 @@ function commandeVide(date) {
     description: '', fleurs: '', couleurs: '', compositions: [], fleursCommande: [],
     inspirations: [], moodboard: [], moodboardNotes: '',
     statut: 'devis', prix: '', acompte: '', notesInternes: '',
-    etapes: { rdv: '', moodboard: '', devis: '', validation: '' },
+    etapes: { rdv: '', moodboard: '', devis: '', validation: '' }, reponseClient: { date: '', note: '' },
   };
 }
 
@@ -1526,8 +1570,10 @@ function ouvrirFiche(commande) {
   brouillon.inspirations ||= [];
   brouillon.moodboard ||= [];
   brouillon.etapes = { rdv: '', moodboard: '', devis: '', validation: '', ...(brouillon.etapes || {}) };
+  brouillon.reponseClient = { date: '', note: '', ...(brouillon.reponseClient || {}) };
   const f = formulaire();
   afficherEtapes(brouillon.etapes);
+  afficherReponse(brouillon.reponseClient);
   for (const nom of CHAMPS_TEXTE) f.elements[nom].value = brouillon[nom] ?? '';
   for (const r of f.querySelectorAll('input[name=mode]')) r.checked = r.value === (brouillon.mode || 'livraison');
   $$('input.erreur', f).forEach((el) => el.classList.remove('erreur'));
@@ -1561,6 +1607,7 @@ function lireFormulaire() {
     const bloc = $(`#etapes [data-etape=${e.id}]`);
     c.etapes[e.id] = bloc.querySelector('input[type=checkbox]').checked ? (bloc.querySelector('input[type=date]').value || cleDate(new Date())) : '';
   }
+  c.reponseClient = lireReponse();
   c.compositions = $$('#liste-compositions .ligne-composition', f)
     .map((l) => ({ nom: l.querySelector('[data-nom]').value.trim(), quantite: l.querySelector('[data-quantite]').value.trim() }))
     .filter((x) => x.nom || x.quantite);
@@ -1715,7 +1762,8 @@ async function enregistrerFiche(ev) {
     await Stockage.enregistrerCommande(c);
     await chargerCommandes();
     fermerFiche(true);
-    allerAuMois(dateDepuisCle(c.date), { alerte: cleMois(dateDepuisCle(c.date)) !== cleMois(moisAffiche) });
+    allerAuMois(dateDepuisCle(c.date), { alerte: !tachesOuvertes() && cleMois(dateDepuisCle(c.date)) !== cleMois(moisAffiche) });
+    if (tachesOuvertes()) afficherTaches();
     messageFlottant('Commande enregistrée');
   } catch (e) {
     alert(e.message);
@@ -1732,6 +1780,7 @@ async function supprimerFiche() {
     await chargerCommandes();
     fermerFiche(true);
     afficherCalendrier();
+    if (tachesOuvertes()) afficherTaches();
     messageFlottant('Commande supprimée');
   } catch (e) {
     alert(e.message);
@@ -1957,7 +2006,8 @@ function imprimerDemande(c) {
       </table>
       <table class="imp-infos">
         ${ligneInfo('Statut', echapper(STATUTS[c.statut] || ''))}
-        ${ETAPES.map((e) => ligneInfo(e.nom, c.etapes && c.etapes[e.id] ? 'Oui, le ' + echapper(dateCourte(c.etapes[e.id])) : '')).join('')}
+        ${ETAPES.map((e) => ligneInfo(e.nom, c.etapes && c.etapes[e.id] ? 'Fait le ' + echapper(dateCourte(c.etapes[e.id])) : 'À faire')).join('')}
+        ${c.reponseClient && c.reponseClient.date ? ligneInfo('Réponse du client', `Le ${echapper(dateCourte(c.reponseClient.date))}${c.reponseClient.note ? ' : ' + echapper(c.reponseClient.note) : ''}`) : ''}
         ${ligneInfo('Prix', c.prix ? euros(c.prix) : '')}
         ${ligneInfo('Acompte', c.acompte ? euros(c.acompte) : '')}
         ${ligneInfo('Reste à payer', reste)}
@@ -2036,13 +2086,13 @@ function majRappelCommande() {
     <p><span class="etiquette-rappel">Compositions</span></p>${comp}`;
 }
 
-/* ---------- Étapes de suivi (dans la fiche) ---------- */
+/* ---------- Étapes de suivi (colonne de gauche de la fiche) ---------- */
 
 function afficherEtapes(etapes) {
   $('#etapes').innerHTML = ETAPES.map((e, i) => `
     <div class="etape" data-etape="${e.id}">
-      <label class="etape-case"><input type="checkbox"><span class="etape-rond">${i + 1}</span><span class="etape-nom">${e.nom}</span></label>
-      <input type="date" aria-label="Date : ${e.nom}">
+      <label class="etape-case"><input type="checkbox"><span class="etape-nom"><span class="etape-num">${i + 1}.</span> ${e.nom}</span></label>
+      <div class="etape-etat"><span class="etat-a-faire">À faire</span><span class="etat-fait">Fait le <input type="date" aria-label="Date : ${e.nom}"></span></div>
     </div>`).join('');
   for (const e of ETAPES) {
     const bloc = $(`#etapes [data-etape=${e.id}]`);
@@ -2052,9 +2102,7 @@ function afficherEtapes(etapes) {
   }
 }
 function majEtape(bloc) {
-  const fait = bloc.querySelector('input[type=checkbox]').checked;
-  bloc.classList.toggle('faite', fait);
-  bloc.querySelector('input[type=date]').hidden = !fait;
+  bloc.classList.toggle('faite', bloc.querySelector('input[type=checkbox]').checked);
 }
 function changerEtape(e) {
   const bloc = e.target.closest('.etape');
@@ -2063,6 +2111,8 @@ function changerEtape(e) {
   const date = bloc.querySelector('input[type=date]');
   if (e.target === caseEtape) {
     date.value = caseEtape.checked ? (date.value || cleDate(new Date())) : '';
+    // Un nouvel envoi répond au client : « Le client a répondu » est décoché.
+    if (caseEtape.checked && bloc.dataset.etape !== 'rdv' && $('#reponse-case').checked) { $('#reponse-case').checked = false; majReponse(); }
     // Validation du client : la commande passe de « Devis » à « Confirmée ».
     const statut = formulaire().elements.statut;
     if (bloc.dataset.etape === 'validation' && caseEtape.checked && statut.value === 'devis') statut.value = 'confirmee';
@@ -2070,32 +2120,64 @@ function changerEtape(e) {
   majEtape(bloc);
 }
 
-/* ---------- Liste de tâches ---------- */
+function afficherReponse(r) {
+  $('#reponse-case').checked = !!(r && r.date);
+  $('#reponse-date').value = (r && r.date) || '';
+  $('#reponse-note').value = (r && r.note) || '';
+  majReponse();
+}
+function majReponse() {
+  const oui = $('#reponse-case').checked;
+  $('#reponse-client').classList.toggle('faite', oui);
+  if (oui && !$('#reponse-date').value) $('#reponse-date').value = cleDate(new Date());
+  if (!oui) { $('#reponse-date').value = ''; $('#reponse-note').value = ''; }
+}
+function lireReponse() {
+  return $('#reponse-case').checked
+    ? { date: $('#reponse-date').value || cleDate(new Date()), note: $('#reponse-note').value.trim() }
+    : { date: '', note: '' };
+}
 
-const GROUPES_TACHES = [
-  { id: 'rdv', titre: 'Premier rendez-vous à faire', aide: 'Aucune étape cochée' },
-  { id: 'moodboard', titre: 'Moodboard à envoyer', aide: 'Premier rendez-vous fait' },
-  { id: 'devis', titre: 'Devis à envoyer', aide: 'Moodboard envoyé' },
-  { id: 'attente', titre: 'En attente de réponse du client', aide: 'Devis envoyé' },
-  { id: 'valide', titre: 'Validés', aide: 'Le client a validé' },
+/* ---------- Liste de tâches (pleine page, en colonnes) ---------- */
+
+const COLONNES_TACHES = [
+  { id: 'nouvelles', titre: 'Nouvelles demandes', aide: 'Rendez-vous à fixer avec le client' },
+  { id: 'moi', titre: 'En attente de ma part', aide: "C'est à vous de jouer" },
+  { id: 'client', titre: 'En attente du client', aide: 'Vous avez envoyé, le client doit répondre' },
+  { id: 'valide', titre: 'Validés', aide: 'Le client a dit oui' },
 ];
+const DELAI_RELANCE_DEFAUT = 7;
 
-/* Dernière étape cochée d'une commande (les anciennes commandes confirmées comptent comme validées). */
+function delaiRelance() { return Number(Stockage.lireReglage('delaiRelance')) || DELAI_RELANCE_DEFAUT; }
+
+/* Dernière étape cochée d'une commande. */
 function derniereEtape(c) {
   const et = c.etapes || {};
   for (let i = ETAPES.length - 1; i >= 0; i--) if (et[ETAPES[i].id]) return { etape: ETAPES[i], date: et[ETAPES[i].id] };
   return null;
 }
-function groupeTache(c) {
-  const d = derniereEtape(c);
-  if (!d) return ['confirmee', 'preparation', 'livree'].includes(c.statut) ? 'valide' : 'rdv';
-  return { rdv: 'moodboard', moodboard: 'devis', devis: 'attente', validation: 'valide' }[d.etape.id];
-}
+function joursDepuis(cle) { return Math.round((dateDepuisCle(cleDate(new Date())) - dateDepuisCle(cle)) / 864e5); }
 function depuis(cle) {
-  const n = Math.round((dateDepuisCle(cleDate(new Date())) - dateDepuisCle(cle)) / 864e5);
+  const n = joursDepuis(cle);
   if (n <= 0) return "aujourd'hui";
   if (n === 1) return 'hier';
   return `il y a ${n} jours`;
+}
+
+/* Où se trouve la commande : colonne, étiquette éventuelle, texte de suivi, relance. */
+function etatTache(c) {
+  const d = derniereEtape(c);
+  const r = c.reponseClient || {};
+  if ((d && d.etape.id === 'validation') || (!d && ['confirmee', 'preparation', 'livree'].includes(c.statut))) {
+    return { colonne: 'valide', texte: d ? `Validé le ${dateCourte(d.date)}` : 'Commande confirmée' };
+  }
+  if (!d) return { colonne: 'nouvelles', texte: c.creeLe ? `Demande saisie le ${dateCourte(c.creeLe.slice(0, 10))}` : 'Rendez-vous à fixer' };
+  if (r.date) {
+    return { colonne: 'moi', etiquette: 'Le client a répondu', classe: 'm-rep', texte: `${r.note ? echapper(r.note) + ', le' : 'Réponse reçue le'} ${dateCourte(r.date)}` };
+  }
+  if (d.etape.id === 'rdv') return { colonne: 'moi', etiquette: 'Moodboard à envoyer', classe: 'm-moi', texte: `Rendez-vous fait le ${dateCourte(d.date)}` };
+  const relance = joursDepuis(d.date) >= delaiRelance();
+  return { colonne: 'client', relance, texte: `${d.etape.fait} ${dateCourte(d.date)} · ${depuis(d.date)}${relance ? ', à relancer' : ''}` };
 }
 
 let filtreTaches = '';
@@ -2104,44 +2186,52 @@ function calculerTaches() {
   const auj = cleDate(new Date());
   const liste = trier(commandes.filter((c) => c.date >= auj && c.statut !== 'annulee' && c.statut !== 'livree'
     && (!filtreTaches || typeDe(c) === filtreTaches)));
-  return GROUPES_TACHES.map((g) => ({ ...g, liste: liste.filter((c) => groupeTache(c) === g.id) }));
+  return COLONNES_TACHES.map((col) => ({ ...col, liste: liste.map((c) => ({ c, e: etatTache(c) })).filter((x) => x.e.colonne === col.id) }));
 }
 
-function htmlTaches(groupes, impression) {
-  return groupes.map((g) => `
-    <section class="groupe-taches groupe-${g.id}">
-      <h3>${g.titre} <span class="compte">${g.liste.length}</span></h3>
-      ${g.liste.length ? `<table class="${impression ? 'imp-tableau' : 'tableau'} tableau-taches"><tbody>${g.liste.map((c) => {
-    const d = derniereEtape(c);
-    return `<tr data-id="${echapper(c.id)}" tabindex="0">
-          <td>${echapper(dateCourte(c.date))}</td>
-          <td><strong>${echapper(nomClient(c))}</strong></td>
-          <td><span class="type-etiquette t-${typeDe(c)}"><i class="pastille"></i>${echapper(libelleType(c))}</span></td>
-          <td class="derniere-etape">${d ? `${echapper(d.etape.fait)} ${echapper(dateCourte(d.date))}${g.id === 'attente' ? ` <small>(${depuis(d.date)})</small>` : ''}` : '<small>Aucune étape cochée</small>'}</td>
-        </tr>`;
-  }).join('')}</tbody></table>` : '<p class="vide-groupe">Aucun évènement.</p>'}
-    </section>`).join('');
+function carteTache({ c, e }) {
+  return `<button type="button" class="carte-tache t-${typeDe(c)}${e.relance ? ' relance' : ''}" data-id="${echapper(c.id)}">
+    ${e.etiquette ? `<span class="etiquette-tache ${e.classe}">${e.etiquette}</span>` : ''}
+    <span class="carte-ligne"><strong>${echapper(nomClient(c))}</strong><span class="carte-date">${echapper(dateCourte(c.date))}</span></span>
+    <span class="carte-type">${echapper(libelleType(c))}</span>
+    <span class="carte-etat">${e.texte}</span>
+  </button>`;
 }
 
 function afficherTaches() {
-  const groupes = calculerTaches();
-  const total = groupes.reduce((n, g) => n + g.liste.length, 0);
-  $('#resume-taches').textContent = `${total} évènement${total > 1 ? 's' : ''} à venir${filtreTaches ? ' · ' + typeInfo(filtreTaches).nom : ''} (hors annulés et livrés)`;
-  $('#contenu-taches').innerHTML = htmlTaches(groupes, false);
+  $('#contenu-taches').innerHTML = calculerTaches().map((col) => `
+    <section class="colonne-tache colonne-${col.id}">
+      <h2>${col.titre} <span class="compte">${col.liste.length}</span></h2>
+      <p class="aide-colonne">${col.aide}</p>
+      <div class="cartes">${col.liste.length ? col.liste.map(carteTache).join('') : '<p class="vide-groupe">Aucun évènement.</p>'}</div>
+    </section>`).join('');
 }
 
 function ouvrirTaches() {
   $('#filtre-taches').innerHTML = '<option value="">Tous</option>' + types.map((t) => `<option value="${echapper(t.id)}">${echapper(t.nom)}</option>`).join('');
   if (!types.some((t) => t.id === filtreTaches)) filtreTaches = '';
   $('#filtre-taches').value = filtreTaches;
+  $('#delai-relance').value = delaiRelance();
   afficherTaches();
-  $('#fenetre-taches').hidden = false;
+  $('.principal').hidden = true;
+  $('#page-taches').hidden = false;
 }
+function fermerTaches() {
+  $('#page-taches').hidden = true;
+  $('.principal').hidden = false;
+  ajusterDebordements();
+}
+function tachesOuvertes() { return !$('#page-taches').hidden; }
 
 function imprimerTaches() {
   imprimer(`<div class="imp-page">
     ${enteteImpression('Liste de tâches', dateImpression() + (filtreTaches ? ' · ' + echapper(typeInfo(filtreTaches).nom) : ''))}
-    ${htmlTaches(calculerTaches(), true)}
+    ${calculerTaches().map((col) => `
+      <section class="groupe-taches"><h3>${col.titre} (${col.liste.length})</h3>
+      ${col.liste.length ? `<table class="imp-tableau tableau-taches"><tbody>${col.liste.map(({ c, e }) => `<tr>
+        <td>${echapper(dateCourte(c.date))}</td><td><strong>${echapper(nomClient(c))}</strong></td><td>${echapper(libelleType(c))}</td>
+        <td>${e.etiquette ? e.etiquette + ' · ' : ''}${e.texte}</td></tr>`).join('')}</tbody></table>` : '<p class="vide-groupe">Aucun évènement.</p>'}
+      </section>`).join('')}
   </div>`);
 }
 
@@ -2222,14 +2312,20 @@ function brancher() {
   $('#btn-types').onclick = () => { afficherGestionTypes(); $('#fenetre-types').hidden = false; };
   $('#btn-fleurs').onclick = ouvrirFleurs;
   $('#btn-taches').onclick = ouvrirTaches;
+  $('#taches-retour').onclick = fermerTaches;
   $('#filtre-taches').onchange = (e) => { filtreTaches = e.target.value; afficherTaches(); };
-  $('#imprimer-taches').onclick = imprimerTaches;
-  const ouvrirDepuisTaches = (e) => {
-    const tr = e.target.closest('tr[data-id]');
-    if (tr && (e.type === 'click' || e.key === 'Enter')) { $('#fenetre-taches').hidden = true; ouvrirFicheParId(tr.dataset.id); }
+  $('#delai-relance').onchange = async (e) => {
+    const n = Math.max(1, Math.min(90, parseInt(e.target.value, 10) || DELAI_RELANCE_DEFAUT));
+    e.target.value = n;
+    await Stockage.ecrireReglage('delaiRelance', n);
+    afficherTaches();
   };
-  $('#contenu-taches').addEventListener('click', ouvrirDepuisTaches);
-  $('#contenu-taches').addEventListener('keydown', ouvrirDepuisTaches);
+  $('#imprimer-taches').onclick = imprimerTaches;
+  $('#contenu-taches').addEventListener('click', (e) => {
+    const carte = e.target.closest('.carte-tache');
+    if (carte) ouvrirFicheParId(carte.dataset.id);
+  });
+  $('#reponse-case').addEventListener('change', majReponse);
   $('#etapes').addEventListener('change', changerEtape);
   $('#semaine-precedente').onclick = () => { debutSemaine = ajouterJours(debutSemaine, -7); afficherFleurs(); };
   $('#semaine-suivante').onclick = () => { debutSemaine = ajouterJours(debutSemaine, 7); afficherFleurs(); };
@@ -2296,7 +2392,7 @@ function brancher() {
   });
 
   // Fenêtres simples : fermeture par le bouton, par un clic à côté
-  for (const id of ['fenetre-mois', 'fenetre-sauvegarde', 'fenetre-types', 'fenetre-fleurs', 'fenetre-taches']) {
+  for (const id of ['fenetre-mois', 'fenetre-sauvegarde', 'fenetre-types', 'fenetre-fleurs']) {
     const fond = $('#' + id);
     fond.addEventListener('click', (e) => { if (e.target === fond || e.target.closest('[data-fermer]')) fond.hidden = true; });
   }

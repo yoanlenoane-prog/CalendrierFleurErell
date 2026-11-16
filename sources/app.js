@@ -193,7 +193,7 @@ function commandeVide(date) {
     description: '', fleurs: '', couleurs: '', compositions: [], fleursCommande: [],
     inspirations: [], moodboard: [], moodboardNotes: '',
     statut: 'devis', prix: '', acompte: '', notesInternes: '',
-    etapes: { rdv: '', moodboard: '', devis: '', validation: '' },
+    etapes: { rdv: '', moodboard: '', devis: '', validation: '' }, reponseClient: { date: '', note: '' },
   };
 }
 
@@ -207,8 +207,10 @@ function ouvrirFiche(commande) {
   brouillon.inspirations ||= [];
   brouillon.moodboard ||= [];
   brouillon.etapes = { rdv: '', moodboard: '', devis: '', validation: '', ...(brouillon.etapes || {}) };
+  brouillon.reponseClient = { date: '', note: '', ...(brouillon.reponseClient || {}) };
   const f = formulaire();
   afficherEtapes(brouillon.etapes);
+  afficherReponse(brouillon.reponseClient);
   for (const nom of CHAMPS_TEXTE) f.elements[nom].value = brouillon[nom] ?? '';
   for (const r of f.querySelectorAll('input[name=mode]')) r.checked = r.value === (brouillon.mode || 'livraison');
   $$('input.erreur', f).forEach((el) => el.classList.remove('erreur'));
@@ -242,6 +244,7 @@ function lireFormulaire() {
     const bloc = $(`#etapes [data-etape=${e.id}]`);
     c.etapes[e.id] = bloc.querySelector('input[type=checkbox]').checked ? (bloc.querySelector('input[type=date]').value || cleDate(new Date())) : '';
   }
+  c.reponseClient = lireReponse();
   c.compositions = $$('#liste-compositions .ligne-composition', f)
     .map((l) => ({ nom: l.querySelector('[data-nom]').value.trim(), quantite: l.querySelector('[data-quantite]').value.trim() }))
     .filter((x) => x.nom || x.quantite);
@@ -396,7 +399,8 @@ async function enregistrerFiche(ev) {
     await Stockage.enregistrerCommande(c);
     await chargerCommandes();
     fermerFiche(true);
-    allerAuMois(dateDepuisCle(c.date), { alerte: cleMois(dateDepuisCle(c.date)) !== cleMois(moisAffiche) });
+    allerAuMois(dateDepuisCle(c.date), { alerte: !tachesOuvertes() && cleMois(dateDepuisCle(c.date)) !== cleMois(moisAffiche) });
+    if (tachesOuvertes()) afficherTaches();
     messageFlottant('Commande enregistrée');
   } catch (e) {
     alert(e.message);
@@ -413,6 +417,7 @@ async function supprimerFiche() {
     await chargerCommandes();
     fermerFiche(true);
     afficherCalendrier();
+    if (tachesOuvertes()) afficherTaches();
     messageFlottant('Commande supprimée');
   } catch (e) {
     alert(e.message);
@@ -638,7 +643,8 @@ function imprimerDemande(c) {
       </table>
       <table class="imp-infos">
         ${ligneInfo('Statut', echapper(STATUTS[c.statut] || ''))}
-        ${ETAPES.map((e) => ligneInfo(e.nom, c.etapes && c.etapes[e.id] ? 'Oui, le ' + echapper(dateCourte(c.etapes[e.id])) : '')).join('')}
+        ${ETAPES.map((e) => ligneInfo(e.nom, c.etapes && c.etapes[e.id] ? 'Fait le ' + echapper(dateCourte(c.etapes[e.id])) : 'À faire')).join('')}
+        ${c.reponseClient && c.reponseClient.date ? ligneInfo('Réponse du client', `Le ${echapper(dateCourte(c.reponseClient.date))}${c.reponseClient.note ? ' : ' + echapper(c.reponseClient.note) : ''}`) : ''}
         ${ligneInfo('Prix', c.prix ? euros(c.prix) : '')}
         ${ligneInfo('Acompte', c.acompte ? euros(c.acompte) : '')}
         ${ligneInfo('Reste à payer', reste)}
@@ -717,13 +723,13 @@ function majRappelCommande() {
     <p><span class="etiquette-rappel">Compositions</span></p>${comp}`;
 }
 
-/* ---------- Étapes de suivi (dans la fiche) ---------- */
+/* ---------- Étapes de suivi (colonne de gauche de la fiche) ---------- */
 
 function afficherEtapes(etapes) {
   $('#etapes').innerHTML = ETAPES.map((e, i) => `
     <div class="etape" data-etape="${e.id}">
-      <label class="etape-case"><input type="checkbox"><span class="etape-rond">${i + 1}</span><span class="etape-nom">${e.nom}</span></label>
-      <input type="date" aria-label="Date : ${e.nom}">
+      <label class="etape-case"><input type="checkbox"><span class="etape-nom"><span class="etape-num">${i + 1}.</span> ${e.nom}</span></label>
+      <div class="etape-etat"><span class="etat-a-faire">À faire</span><span class="etat-fait">Fait le <input type="date" aria-label="Date : ${e.nom}"></span></div>
     </div>`).join('');
   for (const e of ETAPES) {
     const bloc = $(`#etapes [data-etape=${e.id}]`);
@@ -733,9 +739,7 @@ function afficherEtapes(etapes) {
   }
 }
 function majEtape(bloc) {
-  const fait = bloc.querySelector('input[type=checkbox]').checked;
-  bloc.classList.toggle('faite', fait);
-  bloc.querySelector('input[type=date]').hidden = !fait;
+  bloc.classList.toggle('faite', bloc.querySelector('input[type=checkbox]').checked);
 }
 function changerEtape(e) {
   const bloc = e.target.closest('.etape');
@@ -744,6 +748,8 @@ function changerEtape(e) {
   const date = bloc.querySelector('input[type=date]');
   if (e.target === caseEtape) {
     date.value = caseEtape.checked ? (date.value || cleDate(new Date())) : '';
+    // Un nouvel envoi répond au client : « Le client a répondu » est décoché.
+    if (caseEtape.checked && bloc.dataset.etape !== 'rdv' && $('#reponse-case').checked) { $('#reponse-case').checked = false; majReponse(); }
     // Validation du client : la commande passe de « Devis » à « Confirmée ».
     const statut = formulaire().elements.statut;
     if (bloc.dataset.etape === 'validation' && caseEtape.checked && statut.value === 'devis') statut.value = 'confirmee';
@@ -751,32 +757,64 @@ function changerEtape(e) {
   majEtape(bloc);
 }
 
-/* ---------- Liste de tâches ---------- */
+function afficherReponse(r) {
+  $('#reponse-case').checked = !!(r && r.date);
+  $('#reponse-date').value = (r && r.date) || '';
+  $('#reponse-note').value = (r && r.note) || '';
+  majReponse();
+}
+function majReponse() {
+  const oui = $('#reponse-case').checked;
+  $('#reponse-client').classList.toggle('faite', oui);
+  if (oui && !$('#reponse-date').value) $('#reponse-date').value = cleDate(new Date());
+  if (!oui) { $('#reponse-date').value = ''; $('#reponse-note').value = ''; }
+}
+function lireReponse() {
+  return $('#reponse-case').checked
+    ? { date: $('#reponse-date').value || cleDate(new Date()), note: $('#reponse-note').value.trim() }
+    : { date: '', note: '' };
+}
 
-const GROUPES_TACHES = [
-  { id: 'rdv', titre: 'Premier rendez-vous à faire', aide: 'Aucune étape cochée' },
-  { id: 'moodboard', titre: 'Moodboard à envoyer', aide: 'Premier rendez-vous fait' },
-  { id: 'devis', titre: 'Devis à envoyer', aide: 'Moodboard envoyé' },
-  { id: 'attente', titre: 'En attente de réponse du client', aide: 'Devis envoyé' },
-  { id: 'valide', titre: 'Validés', aide: 'Le client a validé' },
+/* ---------- Liste de tâches (pleine page, en colonnes) ---------- */
+
+const COLONNES_TACHES = [
+  { id: 'nouvelles', titre: 'Nouvelles demandes', aide: 'Rendez-vous à fixer avec le client' },
+  { id: 'moi', titre: 'En attente de ma part', aide: "C'est à vous de jouer" },
+  { id: 'client', titre: 'En attente du client', aide: 'Vous avez envoyé, le client doit répondre' },
+  { id: 'valide', titre: 'Validés', aide: 'Le client a dit oui' },
 ];
+const DELAI_RELANCE_DEFAUT = 7;
 
-/* Dernière étape cochée d'une commande (les anciennes commandes confirmées comptent comme validées). */
+function delaiRelance() { return Number(Stockage.lireReglage('delaiRelance')) || DELAI_RELANCE_DEFAUT; }
+
+/* Dernière étape cochée d'une commande. */
 function derniereEtape(c) {
   const et = c.etapes || {};
   for (let i = ETAPES.length - 1; i >= 0; i--) if (et[ETAPES[i].id]) return { etape: ETAPES[i], date: et[ETAPES[i].id] };
   return null;
 }
-function groupeTache(c) {
-  const d = derniereEtape(c);
-  if (!d) return ['confirmee', 'preparation', 'livree'].includes(c.statut) ? 'valide' : 'rdv';
-  return { rdv: 'moodboard', moodboard: 'devis', devis: 'attente', validation: 'valide' }[d.etape.id];
-}
+function joursDepuis(cle) { return Math.round((dateDepuisCle(cleDate(new Date())) - dateDepuisCle(cle)) / 864e5); }
 function depuis(cle) {
-  const n = Math.round((dateDepuisCle(cleDate(new Date())) - dateDepuisCle(cle)) / 864e5);
+  const n = joursDepuis(cle);
   if (n <= 0) return "aujourd'hui";
   if (n === 1) return 'hier';
   return `il y a ${n} jours`;
+}
+
+/* Où se trouve la commande : colonne, étiquette éventuelle, texte de suivi, relance. */
+function etatTache(c) {
+  const d = derniereEtape(c);
+  const r = c.reponseClient || {};
+  if ((d && d.etape.id === 'validation') || (!d && ['confirmee', 'preparation', 'livree'].includes(c.statut))) {
+    return { colonne: 'valide', texte: d ? `Validé le ${dateCourte(d.date)}` : 'Commande confirmée' };
+  }
+  if (!d) return { colonne: 'nouvelles', texte: c.creeLe ? `Demande saisie le ${dateCourte(c.creeLe.slice(0, 10))}` : 'Rendez-vous à fixer' };
+  if (r.date) {
+    return { colonne: 'moi', etiquette: 'Le client a répondu', classe: 'm-rep', texte: `${r.note ? echapper(r.note) + ', le' : 'Réponse reçue le'} ${dateCourte(r.date)}` };
+  }
+  if (d.etape.id === 'rdv') return { colonne: 'moi', etiquette: 'Moodboard à envoyer', classe: 'm-moi', texte: `Rendez-vous fait le ${dateCourte(d.date)}` };
+  const relance = joursDepuis(d.date) >= delaiRelance();
+  return { colonne: 'client', relance, texte: `${d.etape.fait} ${dateCourte(d.date)} · ${depuis(d.date)}${relance ? ', à relancer' : ''}` };
 }
 
 let filtreTaches = '';
@@ -785,44 +823,52 @@ function calculerTaches() {
   const auj = cleDate(new Date());
   const liste = trier(commandes.filter((c) => c.date >= auj && c.statut !== 'annulee' && c.statut !== 'livree'
     && (!filtreTaches || typeDe(c) === filtreTaches)));
-  return GROUPES_TACHES.map((g) => ({ ...g, liste: liste.filter((c) => groupeTache(c) === g.id) }));
+  return COLONNES_TACHES.map((col) => ({ ...col, liste: liste.map((c) => ({ c, e: etatTache(c) })).filter((x) => x.e.colonne === col.id) }));
 }
 
-function htmlTaches(groupes, impression) {
-  return groupes.map((g) => `
-    <section class="groupe-taches groupe-${g.id}">
-      <h3>${g.titre} <span class="compte">${g.liste.length}</span></h3>
-      ${g.liste.length ? `<table class="${impression ? 'imp-tableau' : 'tableau'} tableau-taches"><tbody>${g.liste.map((c) => {
-    const d = derniereEtape(c);
-    return `<tr data-id="${echapper(c.id)}" tabindex="0">
-          <td>${echapper(dateCourte(c.date))}</td>
-          <td><strong>${echapper(nomClient(c))}</strong></td>
-          <td><span class="type-etiquette t-${typeDe(c)}"><i class="pastille"></i>${echapper(libelleType(c))}</span></td>
-          <td class="derniere-etape">${d ? `${echapper(d.etape.fait)} ${echapper(dateCourte(d.date))}${g.id === 'attente' ? ` <small>(${depuis(d.date)})</small>` : ''}` : '<small>Aucune étape cochée</small>'}</td>
-        </tr>`;
-  }).join('')}</tbody></table>` : '<p class="vide-groupe">Aucun évènement.</p>'}
-    </section>`).join('');
+function carteTache({ c, e }) {
+  return `<button type="button" class="carte-tache t-${typeDe(c)}${e.relance ? ' relance' : ''}" data-id="${echapper(c.id)}">
+    ${e.etiquette ? `<span class="etiquette-tache ${e.classe}">${e.etiquette}</span>` : ''}
+    <span class="carte-ligne"><strong>${echapper(nomClient(c))}</strong><span class="carte-date">${echapper(dateCourte(c.date))}</span></span>
+    <span class="carte-type">${echapper(libelleType(c))}</span>
+    <span class="carte-etat">${e.texte}</span>
+  </button>`;
 }
 
 function afficherTaches() {
-  const groupes = calculerTaches();
-  const total = groupes.reduce((n, g) => n + g.liste.length, 0);
-  $('#resume-taches').textContent = `${total} évènement${total > 1 ? 's' : ''} à venir${filtreTaches ? ' · ' + typeInfo(filtreTaches).nom : ''} (hors annulés et livrés)`;
-  $('#contenu-taches').innerHTML = htmlTaches(groupes, false);
+  $('#contenu-taches').innerHTML = calculerTaches().map((col) => `
+    <section class="colonne-tache colonne-${col.id}">
+      <h2>${col.titre} <span class="compte">${col.liste.length}</span></h2>
+      <p class="aide-colonne">${col.aide}</p>
+      <div class="cartes">${col.liste.length ? col.liste.map(carteTache).join('') : '<p class="vide-groupe">Aucun évènement.</p>'}</div>
+    </section>`).join('');
 }
 
 function ouvrirTaches() {
   $('#filtre-taches').innerHTML = '<option value="">Tous</option>' + types.map((t) => `<option value="${echapper(t.id)}">${echapper(t.nom)}</option>`).join('');
   if (!types.some((t) => t.id === filtreTaches)) filtreTaches = '';
   $('#filtre-taches').value = filtreTaches;
+  $('#delai-relance').value = delaiRelance();
   afficherTaches();
-  $('#fenetre-taches').hidden = false;
+  $('.principal').hidden = true;
+  $('#page-taches').hidden = false;
 }
+function fermerTaches() {
+  $('#page-taches').hidden = true;
+  $('.principal').hidden = false;
+  ajusterDebordements();
+}
+function tachesOuvertes() { return !$('#page-taches').hidden; }
 
 function imprimerTaches() {
   imprimer(`<div class="imp-page">
     ${enteteImpression('Liste de tâches', dateImpression() + (filtreTaches ? ' · ' + echapper(typeInfo(filtreTaches).nom) : ''))}
-    ${htmlTaches(calculerTaches(), true)}
+    ${calculerTaches().map((col) => `
+      <section class="groupe-taches"><h3>${col.titre} (${col.liste.length})</h3>
+      ${col.liste.length ? `<table class="imp-tableau tableau-taches"><tbody>${col.liste.map(({ c, e }) => `<tr>
+        <td>${echapper(dateCourte(c.date))}</td><td><strong>${echapper(nomClient(c))}</strong></td><td>${echapper(libelleType(c))}</td>
+        <td>${e.etiquette ? e.etiquette + ' · ' : ''}${e.texte}</td></tr>`).join('')}</tbody></table>` : '<p class="vide-groupe">Aucun évènement.</p>'}
+      </section>`).join('')}
   </div>`);
 }
 
@@ -903,14 +949,20 @@ function brancher() {
   $('#btn-types').onclick = () => { afficherGestionTypes(); $('#fenetre-types').hidden = false; };
   $('#btn-fleurs').onclick = ouvrirFleurs;
   $('#btn-taches').onclick = ouvrirTaches;
+  $('#taches-retour').onclick = fermerTaches;
   $('#filtre-taches').onchange = (e) => { filtreTaches = e.target.value; afficherTaches(); };
-  $('#imprimer-taches').onclick = imprimerTaches;
-  const ouvrirDepuisTaches = (e) => {
-    const tr = e.target.closest('tr[data-id]');
-    if (tr && (e.type === 'click' || e.key === 'Enter')) { $('#fenetre-taches').hidden = true; ouvrirFicheParId(tr.dataset.id); }
+  $('#delai-relance').onchange = async (e) => {
+    const n = Math.max(1, Math.min(90, parseInt(e.target.value, 10) || DELAI_RELANCE_DEFAUT));
+    e.target.value = n;
+    await Stockage.ecrireReglage('delaiRelance', n);
+    afficherTaches();
   };
-  $('#contenu-taches').addEventListener('click', ouvrirDepuisTaches);
-  $('#contenu-taches').addEventListener('keydown', ouvrirDepuisTaches);
+  $('#imprimer-taches').onclick = imprimerTaches;
+  $('#contenu-taches').addEventListener('click', (e) => {
+    const carte = e.target.closest('.carte-tache');
+    if (carte) ouvrirFicheParId(carte.dataset.id);
+  });
+  $('#reponse-case').addEventListener('change', majReponse);
   $('#etapes').addEventListener('change', changerEtape);
   $('#semaine-precedente').onclick = () => { debutSemaine = ajouterJours(debutSemaine, -7); afficherFleurs(); };
   $('#semaine-suivante').onclick = () => { debutSemaine = ajouterJours(debutSemaine, 7); afficherFleurs(); };
@@ -977,7 +1029,7 @@ function brancher() {
   });
 
   // Fenêtres simples : fermeture par le bouton, par un clic à côté
-  for (const id of ['fenetre-mois', 'fenetre-sauvegarde', 'fenetre-types', 'fenetre-fleurs', 'fenetre-taches']) {
+  for (const id of ['fenetre-mois', 'fenetre-sauvegarde', 'fenetre-types', 'fenetre-fleurs']) {
     const fond = $('#' + id);
     fond.addEventListener('click', (e) => { if (e.target === fond || e.target.closest('[data-fermer]')) fond.hidden = true; });
   }

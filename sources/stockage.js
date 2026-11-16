@@ -104,6 +104,7 @@ const Stockage = (() => {
       types: await idbLire('reglages', 'types'),
       derniereSauvegarde: await idbLire('reglages', 'derniereSauvegarde'),
       initialise: await idbLire('reglages', 'initialise'),
+      delaiRelance: await idbLire('reglages', 'delaiRelance'),
     };
     images.clear();
     await new Promise((resolve, reject) => {
@@ -173,7 +174,7 @@ const Stockage = (() => {
         await ecrireFichier(dossier, 'reglages.json', JSON.stringify(reglages, null, 2));
       } else {
         await transaction(['reglages'], 'readwrite', (tx) => {
-          for (const cle of ['types', 'derniereSauvegarde', 'initialise']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
+          for (const cle of ['types', 'derniereSauvegarde', 'initialise', 'delaiRelance']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
         });
       }
     });
@@ -393,6 +394,8 @@ const Stockage = (() => {
     },
 
     async derniereSauvegarde() { return reglages.derniereSauvegarde || null; },
+    lireReglage(cle) { return reglages[cle] ?? null; },
+    async ecrireReglage(cle, valeur) { reglages[cle] = valeur; await persisterReglages(); },
     async lireTypes() { return reglages.types || null; },
     async ecrireTypes(types) { reglages.types = copie(types); await persisterReglages(); },
   };

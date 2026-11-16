@@ -107,6 +107,20 @@
     </div>
   </main>
 
+  <!-- Liste de tâches (pleine page, à la place du calendrier) -->
+  <section class="page-taches" id="page-taches" hidden>
+    <div class="barre-taches">
+      <button type="button" class="btn btn-contour" id="taches-retour"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Retour au calendrier</button>
+      <h1>Liste de tâches</h1>
+      <span class="espace"></span>
+      <label class="reglage-taches">Relance après <input type="number" id="delai-relance" min="1" max="90" step="1"> jours</label>
+      <label class="reglage-taches">Évènements <select id="filtre-taches"></select></label>
+      <button type="button" class="btn btn-contour" id="imprimer-taches">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer</button>
+    </div>
+    <div class="colonnes-taches" id="contenu-taches"></div>
+  </section>
+
   <!-- Liste des commandes (alerte mensuelle, ou commandes d'un jour) -->
   <div class="fond" id="fenetre-mois" hidden>
     <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-alerte">
@@ -141,8 +155,18 @@
         </div>
         <button type="button" class="fermer" id="fiche-fermer" aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
-      <div class="avancement" id="avancement">
+      <div class="fiche-cadre">
+      <aside class="avancement" id="avancement" aria-label="Suivi de la commande">
+        <div class="avancement-titre">Suivi</div>
         <div class="etapes" id="etapes"></div>
+        <div class="reponse-client" id="reponse-client">
+          <label class="etape-case"><input type="checkbox" id="reponse-case"><span class="etape-nom">Le client a répondu</span></label>
+          <div class="reponse-detail">
+            <span class="reponse-le">le <input type="date" id="reponse-date" aria-label="Date de la réponse du client"></span>
+            <input id="reponse-note" placeholder="Ce qu'il demande…" aria-label="Ce que demande le client">
+          </div>
+          <p class="aide-etapes">À cocher quand le client vous répond : la commande passe «&nbsp;En attente de ma part&nbsp;». Décochez quand vous lui avez répondu.</p>
+        </div>
         <label class="statut-fiche">Statut
           <select name="statut">
             <option value="devis">Devis</option>
@@ -152,7 +176,8 @@
             <option value="annulee">Annulée</option>
           </select>
         </label>
-      </div>
+      </aside>
+      <div class="fiche-droite">
       <div class="onglets" role="tablist" aria-label="Parties de la fiche">
         <button type="button" class="onglet actif" role="tab" data-onglet="demande" aria-selected="true">Demande client</button>
         <button type="button" class="onglet" role="tab" data-onglet="moodboard" aria-selected="false">Moodboard</button>
@@ -261,6 +286,8 @@
         </section>
         </div>
       </div>
+      </div>
+      </div>
       <div class="fenetre-pied">
         <button type="button" class="btn btn-danger" id="fiche-supprimer">Supprimer</button>
         <button type="button" class="btn btn-contour" id="fiche-imprimer">
@@ -331,31 +358,6 @@
   </div>
 
   <!-- Fleurs à commander -->
-  <div class="fond" id="fenetre-taches" hidden>
-    <div class="fenetre fenetre-large" role="dialog" aria-modal="true" aria-labelledby="titre-taches">
-      <div class="fenetre-entete">
-        <div>
-          <h2 id="titre-taches">Liste de tâches</h2>
-          <p class="sous-titre" id="resume-taches"></p>
-        </div>
-        <div class="navigation">
-          <label class="filtre-taches">Évènements
-            <select id="filtre-taches"></select>
-          </label>
-          <button class="fermer" data-fermer aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-        </div>
-      </div>
-      <div class="fenetre-corps" id="contenu-taches"></div>
-      <div class="fenetre-pied">
-        <span class="aide-pied">Cliquez sur une ligne pour ouvrir la fiche et cocher l'étape suivante.</span>
-        <span class="espace"></span>
-        <button class="btn btn-contour" id="imprimer-taches">
-          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer</button>
-        <button class="btn btn-plein" data-fermer>Fermer</button>
-      </div>
-    </div>
-  </div>
-
   <div class="fond" id="fenetre-fleurs" hidden>
     <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-fleurs">
       <div class="fenetre-entete">
