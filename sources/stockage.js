@@ -16,7 +16,7 @@ const Stockage = (() => {
   const NOM_BASE = 'calendrier-arrose';
   const SOUS_DOSSIER = 'donnees-calendrier';
   const NB_SAUVEGARDES_AUTO = 30;
-  const TYPES_MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml' };
+  const TYPES_MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml', pdf: 'application/pdf' };
 
   let base = null;          // IndexedDB
   let mode = null;          // 'dossier' | 'navigateur'
@@ -343,10 +343,15 @@ const Stockage = (() => {
       if (avant) await retirerImages(imagesDe(avant).filter((n) => !utilisees.has(n)));
     },
 
-    async ajouterImage(blob) {
-      const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/svg+xml': 'svg' }[blob.type];
-      if (!ext) throw new Error('format d’image non pris en charge (utilisez JPG ou PNG)');
-      const nom = `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}.${ext}`;
+    /* Image ou document PDF. Pour un PDF, le nom d'origine est gardé dans le nom du fichier. */
+    async ajouterImage(blob, nomOrigine = '') {
+      const estPdf = blob.type === 'application/pdf' || /\.pdf$/i.test(nomOrigine);
+      const ext = estPdf ? 'pdf' : { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/svg+xml': 'svg' }[blob.type];
+      if (!ext) throw new Error('format non pris en charge (utilisez JPG, PNG ou PDF)');
+      if (estPdf && blob.type !== 'application/pdf') blob = new Blob([blob], { type: 'application/pdf' });
+      const titre = estPdf ? '_' + String(nomOrigine).replace(/\.pdf$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) : '';
+      const nom = `${estPdf ? 'doc' : 'img'}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}${titre === '_' ? '' : titre}.${ext}`;
       await persisterImage(nom, blob);
       memoriserImage(nom, blob);
       return nom;

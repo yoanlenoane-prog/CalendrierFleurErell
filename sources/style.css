@@ -434,3 +434,58 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
 .carte-dossier .ecran-sans-dossier { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--trait); font-size: 13.5px; color: var(--texte-doux); }
 .lien { background: none; border: 0; padding: 0; font: inherit; color: var(--framboise); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .lien:hover { color: var(--framboise-fonce); }
+
+/* ---------- Étapes de suivi (fiche) ---------- */
+.avancement {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap; flex: none;
+  padding: 10px 24px; background: var(--papier); border-bottom: 1px solid var(--trait);
+}
+.etapes { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
+.etape {
+  display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 10px; border: 1px solid var(--trait);
+  border-radius: 8px; background: var(--creme); min-width: 150px; flex: 1; min-height: 58px;
+}
+.etape.faite { border-color: var(--framboise); background: var(--framboise-pale); }
+.etape-case { display: flex; flex-direction: row; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--texte-doux); }
+.etape-case input { position: absolute; opacity: 0; pointer-events: none; }
+.etape-rond {
+  width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--trait-fort); flex: none;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: var(--texte-doux);
+}
+.etape.faite .etape-case { color: var(--framboise); }
+.etape.faite .etape-rond { background: var(--framboise); border-color: var(--framboise); color: #fff; font-size: 0; }
+.etape.faite .etape-rond::after { content: ""; width: 9px; height: 5px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: translateY(-1px) rotate(-45deg); }
+.etape-case input:focus-visible + .etape-rond { outline: 2px solid var(--framboise); outline-offset: 2px; }
+.etape input[type=date] { align-self: flex-start; font: inherit; font-size: 12.5px; padding: 1px 4px; min-height: 0; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--texte); margin-left: 26px; width: auto; }
+.etape input[type=date]:hover, .etape input[type=date]:focus { border-color: var(--trait-fort); background: #fff; }
+.statut-fiche { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: var(--texte-doux); }
+.statut-fiche select { width: auto; }
+
+/* ---------- PDF dans le moodboard ---------- */
+.vignette-pdf { background: #fff; border: 1px solid var(--trait-fort); }
+.vignette-pdf a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; height: 100%;
+  padding: 12px; text-align: center; color: var(--texte); text-decoration: none;
+}
+.vignette-pdf a:hover { background: var(--framboise-pale); }
+.vignette-pdf .icone { width: 34px; height: 34px; color: var(--framboise); stroke-width: 1.4; }
+.pdf-marque { font-size: 11px; letter-spacing: .12em; font-weight: 600; color: var(--framboise); }
+.pdf-nom { font-size: 12.5px; line-height: 1.3; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.pdf-ouvrir { font-size: 12px; color: var(--texte-doux); text-decoration: underline; }
+
+/* ---------- Liste de tâches ---------- */
+.filtre-taches { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: var(--texte-doux); margin-right: 6px; }
+.filtre-taches select { width: auto; }
+.groupe-taches + .groupe-taches { margin-top: 18px; }
+.groupe-taches h3 { font-family: var(--serif); font-size: 21px; color: var(--framboise); font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+.groupe-taches .compte { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--texte-doux); background: var(--papier); border: 1px solid var(--trait); border-radius: 10px; padding: 1px 8px; }
+.groupe-attente h3 { color: #8E5219; }
+.groupe-valide h3 { color: #2F6A2C; }
+.tableau-taches { table-layout: fixed; }
+.tableau-taches td:first-child { width: 150px; }
+.tableau-taches td:nth-child(2), .tableau-taches td:nth-child(3) { width: 25%; overflow: hidden; text-overflow: ellipsis; }
+.derniere-etape { color: var(--texte-doux); font-size: 13.5px; }
+.vide-groupe { color: var(--texte-doux); font-size: 13.5px; font-style: italic; margin: 2px 0 0; }
+.aide-pied { font-size: 13px; color: var(--texte-doux); }
+#zone-impression .groupe-taches h3 { font-size: 16px; }
+#zone-impression .compte { border: 0; }

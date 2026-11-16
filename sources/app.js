@@ -13,6 +13,12 @@ const TYPES_PAR_DEFAUT = [
 ];
 let types = structuredClone(TYPES_PAR_DEFAUT);
 const UNITES = ['tiges', 'bottes', 'pots'];
+const ETAPES = [
+  { id: 'rdv', nom: 'Premier rendez-vous', fait: 'Premier rendez-vous le' },
+  { id: 'moodboard', nom: 'Moodboard envoyé', fait: 'Moodboard envoyé le' },
+  { id: 'devis', nom: 'Devis envoyé', fait: 'Devis envoyé le' },
+  { id: 'validation', nom: 'Validation client', fait: 'Validé le' },
+];
 const STATUTS = { devis: 'Devis', confirmee: 'Confirmée', preparation: 'En préparation', livree: 'Livrée', annulee: 'Annulée' };
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
@@ -187,6 +193,7 @@ function commandeVide(date) {
     description: '', fleurs: '', couleurs: '', compositions: [], fleursCommande: [],
     inspirations: [], moodboard: [], moodboardNotes: '',
     statut: 'devis', prix: '', acompte: '', notesInternes: '',
+    etapes: { rdv: '', moodboard: '', devis: '', validation: '' },
   };
 }
 
@@ -199,7 +206,9 @@ function ouvrirFiche(commande) {
   brouillon.fleursCommande ||= [];
   brouillon.inspirations ||= [];
   brouillon.moodboard ||= [];
+  brouillon.etapes = { rdv: '', moodboard: '', devis: '', validation: '', ...(brouillon.etapes || {}) };
   const f = formulaire();
+  afficherEtapes(brouillon.etapes);
   for (const nom of CHAMPS_TEXTE) f.elements[nom].value = brouillon[nom] ?? '';
   for (const r of f.querySelectorAll('input[name=mode]')) r.checked = r.value === (brouillon.mode || 'livraison');
   $$('input.erreur', f).forEach((el) => el.classList.remove('erreur'));
@@ -228,6 +237,11 @@ function lireFormulaire() {
   const c = { ...brouillon };
   for (const nom of CHAMPS_TEXTE) c[nom] = f.elements[nom].value.trim();
   c.mode = (f.querySelector('input[name=mode]:checked') || {}).value || 'livraison';
+  c.etapes = {};
+  for (const e of ETAPES) {
+    const bloc = $(`#etapes [data-etape=${e.id}]`);
+    c.etapes[e.id] = bloc.querySelector('input[type=checkbox]').checked ? (bloc.querySelector('input[type=date]').value || cleDate(new Date())) : '';
+  }
   c.compositions = $$('#liste-compositions .ligne-composition', f)
     .map((l) => ({ nom: l.querySelector('[data-nom]').value.trim(), quantite: l.querySelector('[data-quantite]').value.trim() }))
     .filter((x) => x.nom || x.quantite);
@@ -296,12 +310,21 @@ function ajouterLigneFleur(fl = { fleur: '', couleur: '', quantite: '', unite: '
   return ligne;
 }
 
+function estPdf(nom) { return /\.pdf$/i.test(nom); }
+function titrePdf(nom) {
+  const m = /^doc_[a-z0-9]+_[a-z0-9]+_(.+)\.pdf$/i.exec(nom);
+  return (m ? m[1].replace(/-/g, ' ') : 'Document') + '.pdf';
+}
+const ICONE_PDF = '<svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>';
+
 function afficherGaleries() {
   for (const galerie of ['inspirations', 'moodboard']) {
     const conteneur = $(`#galerie-${galerie}`);
     conteneur.innerHTML = brouillon[galerie].map((nom, i) => `
-      <div class="vignette">
-        <img src="${Stockage.urlImage(nom)}" alt="" data-galerie="${galerie}" data-index="${i}">
+      <div class="vignette${estPdf(nom) ? ' vignette-pdf' : ''}">
+        ${estPdf(nom)
+    ? `<a href="${Stockage.urlImage(nom)}" target="_blank" rel="noopener" title="Ouvrir le PDF" data-pdf>${ICONE_PDF}<span class="pdf-marque">PDF</span><span class="pdf-nom">${echapper(titrePdf(nom))}</span><span class="pdf-ouvrir">Ouvrir</span></a>`
+    : `<img src="${Stockage.urlImage(nom)}" alt="" data-galerie="${galerie}" data-index="${i}">`}
         <button type="button" class="retirer" data-galerie="${galerie}" data-index="${i}" title="Retirer cette image" aria-label="Retirer cette image"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>`).join('');
   }
@@ -342,7 +365,7 @@ async function ajouterImages(galerie, fichiers) {
     envoisEnCours++;
     try {
       const blob = await preparerImage(fichier);
-      const nom = await Stockage.ajouterImage(blob);
+      const nom = await Stockage.ajouterImage(blob, fichier.name);
       if (brouillon) brouillon[galerie].push(nom);
     } catch (e) {
       alert(`L'image « ${fichier.name} » n'a pas pu être ajoutée : ${e.message}`);
@@ -615,6 +638,7 @@ function imprimerDemande(c) {
       </table>
       <table class="imp-infos">
         ${ligneInfo('Statut', echapper(STATUTS[c.statut] || ''))}
+        ${ETAPES.map((e) => ligneInfo(e.nom, c.etapes && c.etapes[e.id] ? 'Oui, le ' + echapper(dateCourte(c.etapes[e.id])) : '')).join('')}
         ${ligneInfo('Prix', c.prix ? euros(c.prix) : '')}
         ${ligneInfo('Acompte', c.acompte ? euros(c.acompte) : '')}
         ${ligneInfo('Reste à payer', reste)}
@@ -633,10 +657,13 @@ function imprimerDemande(c) {
 }
 
 function imprimerMoodboard(c) {
+  const images = c.moodboard.filter((n) => !estPdf(n));
+  const pdfs = c.moodboard.filter(estPdf);
   return `<div class="imp-page">
     ${enteteImpression('Moodboard', dateImpression())}
     ${enTeteClient(c)}
-    ${c.moodboard.length ? `<div class="imp-galerie imp-galerie-grande">${c.moodboard.slice(0, 9).map((n) => `<img src="${Stockage.urlImage(n)}" alt="">`).join('')}</div>` : '<p class="imp-vide">Aucune image dans le moodboard.</p>'}
+    ${images.length ? `<div class="imp-galerie imp-galerie-grande">${images.slice(0, 9).map((n) => `<img src="${Stockage.urlImage(n)}" alt="">`).join('')}</div>` : (pdfs.length ? '' : '<p class="imp-vide">Aucune image dans le moodboard.</p>')}
+    ${pdfs.length ? `<h2>Documents PDF joints</h2><ul>${pdfs.map((n) => `<li>${echapper(titrePdf(n))}</li>`).join('')}</ul>` : ''}
     ${c.moodboardNotes ? `<h2>Notes</h2><p>${texteMultiligne(c.moodboardNotes)}</p>` : ''}
   </div>`;
 }
@@ -688,6 +715,115 @@ function majRappelCommande() {
     ${c.fleurs ? `<p><span class="etiquette-rappel">Fleurs souhaitées</span>${echapper(c.fleurs)}</p>` : ''}
     ${c.couleurs ? `<p><span class="etiquette-rappel">Couleurs</span>${echapper(c.couleurs)}</p>` : ''}
     <p><span class="etiquette-rappel">Compositions</span></p>${comp}`;
+}
+
+/* ---------- Étapes de suivi (dans la fiche) ---------- */
+
+function afficherEtapes(etapes) {
+  $('#etapes').innerHTML = ETAPES.map((e, i) => `
+    <div class="etape" data-etape="${e.id}">
+      <label class="etape-case"><input type="checkbox"><span class="etape-rond">${i + 1}</span><span class="etape-nom">${e.nom}</span></label>
+      <input type="date" aria-label="Date : ${e.nom}">
+    </div>`).join('');
+  for (const e of ETAPES) {
+    const bloc = $(`#etapes [data-etape=${e.id}]`);
+    bloc.querySelector('input[type=checkbox]').checked = !!etapes[e.id];
+    bloc.querySelector('input[type=date]').value = etapes[e.id] || '';
+    majEtape(bloc);
+  }
+}
+function majEtape(bloc) {
+  const fait = bloc.querySelector('input[type=checkbox]').checked;
+  bloc.classList.toggle('faite', fait);
+  bloc.querySelector('input[type=date]').hidden = !fait;
+}
+function changerEtape(e) {
+  const bloc = e.target.closest('.etape');
+  if (!bloc) return;
+  const caseEtape = bloc.querySelector('input[type=checkbox]');
+  const date = bloc.querySelector('input[type=date]');
+  if (e.target === caseEtape) {
+    date.value = caseEtape.checked ? (date.value || cleDate(new Date())) : '';
+    // Validation du client : la commande passe de « Devis » à « Confirmée ».
+    const statut = formulaire().elements.statut;
+    if (bloc.dataset.etape === 'validation' && caseEtape.checked && statut.value === 'devis') statut.value = 'confirmee';
+  }
+  majEtape(bloc);
+}
+
+/* ---------- Liste de tâches ---------- */
+
+const GROUPES_TACHES = [
+  { id: 'rdv', titre: 'Premier rendez-vous à faire', aide: 'Aucune étape cochée' },
+  { id: 'moodboard', titre: 'Moodboard à envoyer', aide: 'Premier rendez-vous fait' },
+  { id: 'devis', titre: 'Devis à envoyer', aide: 'Moodboard envoyé' },
+  { id: 'attente', titre: 'En attente de réponse du client', aide: 'Devis envoyé' },
+  { id: 'valide', titre: 'Validés', aide: 'Le client a validé' },
+];
+
+/* Dernière étape cochée d'une commande (les anciennes commandes confirmées comptent comme validées). */
+function derniereEtape(c) {
+  const et = c.etapes || {};
+  for (let i = ETAPES.length - 1; i >= 0; i--) if (et[ETAPES[i].id]) return { etape: ETAPES[i], date: et[ETAPES[i].id] };
+  return null;
+}
+function groupeTache(c) {
+  const d = derniereEtape(c);
+  if (!d) return ['confirmee', 'preparation', 'livree'].includes(c.statut) ? 'valide' : 'rdv';
+  return { rdv: 'moodboard', moodboard: 'devis', devis: 'attente', validation: 'valide' }[d.etape.id];
+}
+function depuis(cle) {
+  const n = Math.round((dateDepuisCle(cleDate(new Date())) - dateDepuisCle(cle)) / 864e5);
+  if (n <= 0) return "aujourd'hui";
+  if (n === 1) return 'hier';
+  return `il y a ${n} jours`;
+}
+
+let filtreTaches = '';
+
+function calculerTaches() {
+  const auj = cleDate(new Date());
+  const liste = trier(commandes.filter((c) => c.date >= auj && c.statut !== 'annulee' && c.statut !== 'livree'
+    && (!filtreTaches || typeDe(c) === filtreTaches)));
+  return GROUPES_TACHES.map((g) => ({ ...g, liste: liste.filter((c) => groupeTache(c) === g.id) }));
+}
+
+function htmlTaches(groupes, impression) {
+  return groupes.map((g) => `
+    <section class="groupe-taches groupe-${g.id}">
+      <h3>${g.titre} <span class="compte">${g.liste.length}</span></h3>
+      ${g.liste.length ? `<table class="${impression ? 'imp-tableau' : 'tableau'} tableau-taches"><tbody>${g.liste.map((c) => {
+    const d = derniereEtape(c);
+    return `<tr data-id="${echapper(c.id)}" tabindex="0">
+          <td>${echapper(dateCourte(c.date))}</td>
+          <td><strong>${echapper(nomClient(c))}</strong></td>
+          <td><span class="type-etiquette t-${typeDe(c)}"><i class="pastille"></i>${echapper(libelleType(c))}</span></td>
+          <td class="derniere-etape">${d ? `${echapper(d.etape.fait)} ${echapper(dateCourte(d.date))}${g.id === 'attente' ? ` <small>(${depuis(d.date)})</small>` : ''}` : '<small>Aucune étape cochée</small>'}</td>
+        </tr>`;
+  }).join('')}</tbody></table>` : '<p class="vide-groupe">Aucun évènement.</p>'}
+    </section>`).join('');
+}
+
+function afficherTaches() {
+  const groupes = calculerTaches();
+  const total = groupes.reduce((n, g) => n + g.liste.length, 0);
+  $('#resume-taches').textContent = `${total} évènement${total > 1 ? 's' : ''} à venir${filtreTaches ? ' · ' + typeInfo(filtreTaches).nom : ''} (hors annulés et livrés)`;
+  $('#contenu-taches').innerHTML = htmlTaches(groupes, false);
+}
+
+function ouvrirTaches() {
+  $('#filtre-taches').innerHTML = '<option value="">Tous</option>' + types.map((t) => `<option value="${echapper(t.id)}">${echapper(t.nom)}</option>`).join('');
+  if (!types.some((t) => t.id === filtreTaches)) filtreTaches = '';
+  $('#filtre-taches').value = filtreTaches;
+  afficherTaches();
+  $('#fenetre-taches').hidden = false;
+}
+
+function imprimerTaches() {
+  imprimer(`<div class="imp-page">
+    ${enteteImpression('Liste de tâches', dateImpression() + (filtreTaches ? ' · ' + echapper(typeInfo(filtreTaches).nom) : ''))}
+    ${htmlTaches(calculerTaches(), true)}
+  </div>`);
 }
 
 /* ---------- Fleurs à commander pour la semaine ---------- */
@@ -766,6 +902,16 @@ function brancher() {
   $('#menu').addEventListener('click', (e) => { if (e.target.closest('.menu-lien')) fermerMenu(); });
   $('#btn-types').onclick = () => { afficherGestionTypes(); $('#fenetre-types').hidden = false; };
   $('#btn-fleurs').onclick = ouvrirFleurs;
+  $('#btn-taches').onclick = ouvrirTaches;
+  $('#filtre-taches').onchange = (e) => { filtreTaches = e.target.value; afficherTaches(); };
+  $('#imprimer-taches').onclick = imprimerTaches;
+  const ouvrirDepuisTaches = (e) => {
+    const tr = e.target.closest('tr[data-id]');
+    if (tr && (e.type === 'click' || e.key === 'Enter')) { $('#fenetre-taches').hidden = true; ouvrirFicheParId(tr.dataset.id); }
+  };
+  $('#contenu-taches').addEventListener('click', ouvrirDepuisTaches);
+  $('#contenu-taches').addEventListener('keydown', ouvrirDepuisTaches);
+  $('#etapes').addEventListener('change', changerEtape);
   $('#semaine-precedente').onclick = () => { debutSemaine = ajouterJours(debutSemaine, -7); afficherFleurs(); };
   $('#semaine-suivante').onclick = () => { debutSemaine = ajouterJours(debutSemaine, 7); afficherFleurs(); };
   $('#imprimer-fleurs').onclick = imprimerFleurs;
@@ -831,7 +977,7 @@ function brancher() {
   });
 
   // Fenêtres simples : fermeture par le bouton, par un clic à côté
-  for (const id of ['fenetre-mois', 'fenetre-sauvegarde', 'fenetre-types', 'fenetre-fleurs']) {
+  for (const id of ['fenetre-mois', 'fenetre-sauvegarde', 'fenetre-types', 'fenetre-fleurs', 'fenetre-taches']) {
     const fond = $('#' + id);
     fond.addEventListener('click', (e) => { if (e.target === fond || e.target.closest('[data-fermer]')) fond.hidden = true; });
   }
@@ -862,7 +1008,11 @@ function brancher() {
   }
   f.addEventListener('click', (e) => {
     const img = e.target.closest('.vignette img');
-    if (img) return ouvrirVisionneuse(brouillon[img.dataset.galerie], Number(img.dataset.index));
+    if (img) {
+      const liste = brouillon[img.dataset.galerie];
+      const seulesImages = liste.filter((n) => !estPdf(n));
+      return ouvrirVisionneuse(seulesImages, seulesImages.indexOf(liste[Number(img.dataset.index)]));
+    }
     const retirer = e.target.closest('.retirer');
     if (retirer) {
       brouillon[retirer.dataset.galerie].splice(Number(retirer.dataset.index), 1);
@@ -930,6 +1080,7 @@ async function mettreAJourExemples() {
     if (!c) continue;
     const maj = { ...c };
     if (!c.fleursCommande && ex.fleursCommande) maj.fleursCommande = ex.fleursCommande;
+    if (!c.etapes && ex.etapes) maj.etapes = ex.etapes;
     if (c.id === 'exemple-anniversaire' && c.type === 'autre') { maj.type = ex.type; maj.typePrecision = ex.typePrecision; }
     if (JSON.stringify(maj) !== JSON.stringify(c)) { await Stockage.enregistrerCommande(maj); modifie = true; }
   }

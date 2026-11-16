@@ -83,7 +83,7 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
 
 ## Fonctionnement
 
-- **Menu** (en haut à gauche) : nouvelle commande, commandes du mois, fleurs à commander, types d'évènements,
+- **Menu** (en haut à gauche) : nouvelle commande, commandes du mois, liste de tâches, fleurs à commander, types d'évènements,
   sauvegarde, et le rappel des couleurs des évènements.
 - **Calendrier** : vue du mois, semaine du lundi au dimanche, flèches ‹ › pour changer de mois, bouton « Aujourd'hui ».
   Le mois tient sur un seul écran : si un jour a trop de commandes, cliquez sur « + N autres ».
@@ -91,10 +91,19 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
 - **Nouvelle commande** : cliquez sur un jour, ou Menu → « Nouvelle commande ».
 - **Fiche** : cliquez sur une commande. Elle a trois onglets :
   - **Demande client** : coordonnées, évènement, demande, compositions, photos d'inspiration, suivi et prix ;
-  - **Moodboard** : vos images (cliquez pour agrandir) et vos notes ;
+  - **Moodboard** : vos images et vos PDF (cliquez pour agrandir ou ouvrir) et vos notes ;
   - **Commande fleuriste** : les fleurs à commander chez le grossiste (fleur, couleur, quantité en tiges, bottes ou pots),
     avec un rappel de la demande.
   Le bouton **Imprimer** imprime l'onglet affiché (page A4).
+- **Étapes de suivi** : en haut de chaque fiche, cochez au fur et à mesure **Premier rendez-vous**, **Moodboard envoyé**,
+  **Devis envoyé** et **Validation client**. La date du jour se met toute seule et peut être modifiée.
+  Quand vous cochez « Validation client », une commande au statut « Devis » passe en « Confirmée ».
+- **Liste de tâches** : Menu → « Liste de tâches » range tous les évènements à venir selon ce qu'il reste à faire
+  (premier rendez-vous, moodboard à envoyer, devis à envoyer, en attente de réponse du client, validés), avec la date
+  du dernier envoi. Le choix « Évènements » en haut permet de n'afficher qu'un type (par exemple les mariages).
+  Cliquez sur une ligne pour ouvrir la fiche. La liste peut s'imprimer.
+- **PDF dans le moodboard** : le bouton « Ajouter des images ou des PDF » accepte aussi les PDF. Cliquez sur un PDF
+  pour l'ouvrir dans un nouvel onglet. Les PDF sont inclus dans les sauvegardes.
 - **Fleurs à commander** : Menu → « Fleurs à commander » additionne les fleurs de toutes les commandes de la semaine
   (flèches pour changer de semaine) et peut s'imprimer. Les commandes sans liste détaillée sont signalées « à préciser ».
 - **Types d'évènements** : Menu → « Types d'évènements » pour changer un nom ou une couleur, ou ajouter vos propres types.

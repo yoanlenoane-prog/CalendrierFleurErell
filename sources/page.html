@@ -61,6 +61,8 @@
         <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nouvelle commande</button>
       <button class="menu-lien" id="btn-commandes-mois">
         <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Commandes du mois</button>
+      <button class="menu-lien" id="btn-taches">
+        <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>Liste de tâches</button>
       <button class="menu-lien" id="btn-fleurs">
         <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M12 11v10M12 16c-3 0-5-2-5-4 3 0 5 2 5 4zM12 18c3 0 5-2 5-4-3 0-5 2-5 4z"/></svg>Fleurs à commander</button>
       <button class="menu-lien" id="btn-types">
@@ -139,6 +141,18 @@
         </div>
         <button type="button" class="fermer" id="fiche-fermer" aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
+      <div class="avancement" id="avancement">
+        <div class="etapes" id="etapes"></div>
+        <label class="statut-fiche">Statut
+          <select name="statut">
+            <option value="devis">Devis</option>
+            <option value="confirmee">Confirmée</option>
+            <option value="preparation">En préparation</option>
+            <option value="livree">Livrée</option>
+            <option value="annulee">Annulée</option>
+          </select>
+        </label>
+      </div>
       <div class="onglets" role="tablist" aria-label="Parties de la fiche">
         <button type="button" class="onglet actif" role="tab" data-onglet="demande" aria-selected="true">Demande client</button>
         <button type="button" class="onglet" role="tab" data-onglet="moodboard" aria-selected="false">Moodboard</button>
@@ -205,15 +219,6 @@
         <section class="bloc">
           <h3>Suivi</h3>
           <div class="champs">
-            <label>Statut
-              <select name="statut">
-                <option value="devis">Devis</option>
-                <option value="confirmee">Confirmée</option>
-                <option value="preparation">En préparation</option>
-                <option value="livree">Livrée</option>
-                <option value="annulee">Annulée</option>
-              </select>
-            </label>
             <label>Prix total (€)<input name="prix" type="number" min="0" step="0.01" inputmode="decimal"></label>
             <label>Acompte versé (€)<input name="acompte" type="number" min="0" step="0.01" inputmode="decimal"></label>
             <div class="reste">Reste à payer<strong id="reste-a-payer">–</strong></div>
@@ -226,8 +231,8 @@
         <section class="bloc bloc-moodboard">
           <h3>Mon moodboard</h3>
           <div class="galerie galerie-grande" id="galerie-moodboard"></div>
-          <label class="btn btn-contour btn-petit ajout-photo">Ajouter des images
-            <input type="file" accept="image/*" multiple data-galerie="moodboard" hidden>
+          <label class="btn btn-contour btn-petit ajout-photo">Ajouter des images ou des PDF
+            <input type="file" accept="image/*,application/pdf,.pdf" multiple data-galerie="moodboard" hidden>
           </label>
           <label class="large">Notes du moodboard<textarea name="moodboardNotes" rows="3" placeholder="Idées, variantes, remarques pour le client…"></textarea></label>
         </section>
@@ -326,6 +331,31 @@
   </div>
 
   <!-- Fleurs à commander -->
+  <div class="fond" id="fenetre-taches" hidden>
+    <div class="fenetre fenetre-large" role="dialog" aria-modal="true" aria-labelledby="titre-taches">
+      <div class="fenetre-entete">
+        <div>
+          <h2 id="titre-taches">Liste de tâches</h2>
+          <p class="sous-titre" id="resume-taches"></p>
+        </div>
+        <div class="navigation">
+          <label class="filtre-taches">Évènements
+            <select id="filtre-taches"></select>
+          </label>
+          <button class="fermer" data-fermer aria-label="Fermer"><svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+      </div>
+      <div class="fenetre-corps" id="contenu-taches"></div>
+      <div class="fenetre-pied">
+        <span class="aide-pied">Cliquez sur une ligne pour ouvrir la fiche et cocher l'étape suivante.</span>
+        <span class="espace"></span>
+        <button class="btn btn-contour" id="imprimer-taches">
+          <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer</button>
+        <button class="btn btn-plein" data-fermer>Fermer</button>
+      </div>
+    </div>
+  </div>
+
   <div class="fond" id="fenetre-fleurs" hidden>
     <div class="fenetre fenetre-moyenne" role="dialog" aria-modal="true" aria-labelledby="titre-fleurs">
       <div class="fenetre-entete">
