@@ -13,12 +13,16 @@ const TYPES_PAR_DEFAUT = [
 ];
 let types = structuredClone(TYPES_PAR_DEFAUT);
 const UNITES = ['tiges', 'bottes', 'pots'];
+/* Étapes de suivi. L'étape 3 (retour du client sur le moodboard) a deux choix : accepté ou à modifier. */
 const ETAPES = [
-  { id: 'rdv', nom: 'Premier rendez-vous', fait: 'Premier rendez-vous le' },
+  { id: 'rdv', nom: 'Premier rendez-vous', fait: 'Rendez-vous fait le' },
   { id: 'moodboard', nom: 'Moodboard envoyé', fait: 'Moodboard envoyé le' },
+  { id: 'avis', nom: 'Moodboard accepté ou à modifier', avis: true },
   { id: 'devis', nom: 'Devis envoyé', fait: 'Devis envoyé le' },
-  { id: 'validation', nom: 'Validation client', fait: 'Validé le' },
+  { id: 'validation', nom: 'Devis validé par le client', fait: 'Devis validé le' },
 ];
+const ETAPES_SIMPLES = ETAPES.filter((e) => !e.avis);
+const ETAPES_VIDES = { rdv: '', moodboard: '', moodboardAccepte: '', moodboardAModifier: '', devis: '', validation: '' };
 const STATUTS = { devis: 'Devis', confirmee: 'Confirmée', preparation: 'En préparation', livree: 'Livrée', annulee: 'Annulée' };
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
@@ -193,7 +197,7 @@ function commandeVide(date) {
     description: '', fleurs: '', couleurs: '', compositions: [], fleursCommande: [],
     inspirations: [], moodboard: [], moodboardNotes: '',
     statut: 'devis', prix: '', acompte: '', notesInternes: '',
-    etapes: { rdv: '', moodboard: '', devis: '', validation: '' }, reponseClient: { date: '', note: '' },
+    etapes: { ...ETAPES_VIDES },
   };
 }
 
@@ -206,11 +210,9 @@ function ouvrirFiche(commande) {
   brouillon.fleursCommande ||= [];
   brouillon.inspirations ||= [];
   brouillon.moodboard ||= [];
-  brouillon.etapes = { rdv: '', moodboard: '', devis: '', validation: '', ...(brouillon.etapes || {}) };
-  brouillon.reponseClient = { date: '', note: '', ...(brouillon.reponseClient || {}) };
+  brouillon.etapes = { ...ETAPES_VIDES, ...(brouillon.etapes || {}) };
   const f = formulaire();
   afficherEtapes(brouillon.etapes);
-  afficherReponse(brouillon.reponseClient);
   for (const nom of CHAMPS_TEXTE) f.elements[nom].value = brouillon[nom] ?? '';
   for (const r of f.querySelectorAll('input[name=mode]')) r.checked = r.value === (brouillon.mode || 'livraison');
   $$('input.erreur', f).forEach((el) => el.classList.remove('erreur'));
@@ -239,12 +241,7 @@ function lireFormulaire() {
   const c = { ...brouillon };
   for (const nom of CHAMPS_TEXTE) c[nom] = f.elements[nom].value.trim();
   c.mode = (f.querySelector('input[name=mode]:checked') || {}).value || 'livraison';
-  c.etapes = {};
-  for (const e of ETAPES) {
-    const bloc = $(`#etapes [data-etape=${e.id}]`);
-    c.etapes[e.id] = bloc.querySelector('input[type=checkbox]').checked ? (bloc.querySelector('input[type=date]').value || cleDate(new Date())) : '';
-  }
-  c.reponseClient = lireReponse();
+  c.etapes = lireEtapes();
   c.compositions = $$('#liste-compositions .ligne-composition', f)
     .map((l) => ({ nom: l.querySelector('[data-nom]').value.trim(), quantite: l.querySelector('[data-quantite]').value.trim() }))
     .filter((x) => x.nom || x.quantite);
@@ -643,8 +640,7 @@ function imprimerDemande(c) {
       </table>
       <table class="imp-infos">
         ${ligneInfo('Statut', echapper(STATUTS[c.statut] || ''))}
-        ${ETAPES.map((e) => ligneInfo(e.nom, c.etapes && c.etapes[e.id] ? 'Fait le ' + echapper(dateCourte(c.etapes[e.id])) : 'À faire')).join('')}
-        ${c.reponseClient && c.reponseClient.date ? ligneInfo('Réponse du client', `Le ${echapper(dateCourte(c.reponseClient.date))}${c.reponseClient.note ? ' : ' + echapper(c.reponseClient.note) : ''}`) : ''}
+        ${ETAPES.map((e, i) => ligneInfo(`${i + 1}. ${e.avis ? 'Retour sur le moodboard' : e.nom}`, echapper(texteEtape(e, c.etapes || {})))).join('')}
         ${ligneInfo('Prix', c.prix ? euros(c.prix) : '')}
         ${ligneInfo('Acompte', c.acompte ? euros(c.acompte) : '')}
         ${ligneInfo('Reste à payer', reste)}
@@ -725,61 +721,107 @@ function majRappelCommande() {
 
 /* ---------- Étapes de suivi (colonne de gauche de la fiche) ---------- */
 
-function afficherEtapes(etapes) {
-  $('#etapes').innerHTML = ETAPES.map((e, i) => `
+function texteEtape(e, et) {
+  if (e.avis) {
+    if (et.moodboardAccepte) return 'Accepté le ' + dateCourte(et.moodboardAccepte);
+    if (et.moodboardAModifier) return 'À modifier (demandé le ' + dateCourte(et.moodboardAModifier) + ')';
+    return 'À faire';
+  }
+  return et[e.id] ? 'Fait le ' + dateCourte(et[e.id]) : 'À faire';
+}
+
+function afficherEtapes(et) {
+  $('#etapes').innerHTML = ETAPES.map((e, i) => e.avis ? `
+    <div class="etape etape-avis" data-etape="avis">
+      <div class="etape-titre"><span class="case-vide" aria-hidden="true"></span><span class="etape-nom"><span class="etape-num">${i + 1}.</span> Retour du client sur le moodboard</span></div>
+      <div class="options-avis">
+        <label class="etape-case option-avis"><input type="checkbox" data-avis="accepte"><span>Accepté</span></label>
+        <label class="etape-case option-avis"><input type="checkbox" data-avis="modifier"><span>À modifier</span></label>
+      </div>
+      <div class="etape-etat">
+        <span class="etat-a-faire">À faire</span>
+        <span class="etat-fait"><span class="etat-mot"></span> le <input type="date" aria-label="Date du retour du client"></span>
+        <button type="button" class="btn btn-contour btn-petit" id="moodboard-renvoye">Moodboard renvoyé</button>
+      </div>
+    </div>` : `
     <div class="etape" data-etape="${e.id}">
       <label class="etape-case"><input type="checkbox"><span class="etape-nom"><span class="etape-num">${i + 1}.</span> ${e.nom}</span></label>
       <div class="etape-etat"><span class="etat-a-faire">À faire</span><span class="etat-fait">Fait le <input type="date" aria-label="Date : ${e.nom}"></span></div>
     </div>`).join('');
-  for (const e of ETAPES) {
+  for (const e of ETAPES_SIMPLES) {
     const bloc = $(`#etapes [data-etape=${e.id}]`);
-    bloc.querySelector('input[type=checkbox]').checked = !!etapes[e.id];
-    bloc.querySelector('input[type=date]').value = etapes[e.id] || '';
+    bloc.querySelector('input[type=checkbox]').checked = !!et[e.id];
+    bloc.querySelector('input[type=date]').value = et[e.id] || '';
     majEtape(bloc);
   }
+  const avis = $('#etapes [data-etape=avis]');
+  avis.querySelector('[data-avis=accepte]').checked = !!et.moodboardAccepte;
+  avis.querySelector('[data-avis=modifier]').checked = !et.moodboardAccepte && !!et.moodboardAModifier;
+  avis.querySelector('input[type=date]').value = et.moodboardAccepte || et.moodboardAModifier || '';
+  majEtape(avis);
 }
+
 function majEtape(bloc) {
+  if (bloc.dataset.etape === 'avis') {
+    const accepte = bloc.querySelector('[data-avis=accepte]').checked;
+    const modifier = bloc.querySelector('[data-avis=modifier]').checked;
+    bloc.classList.toggle('faite', accepte);
+    bloc.classList.toggle('a-modifier', modifier);
+    bloc.querySelector('.etat-mot').textContent = accepte ? 'Accepté' : 'À modifier depuis';
+    bloc.querySelector('#moodboard-renvoye').hidden = !modifier;
+    return;
+  }
   bloc.classList.toggle('faite', bloc.querySelector('input[type=checkbox]').checked);
 }
+
 function changerEtape(e) {
   const bloc = e.target.closest('.etape');
-  if (!bloc) return;
-  const caseEtape = bloc.querySelector('input[type=checkbox]');
+  if (!bloc || e.target.type !== 'checkbox') return majEtape(bloc);
   const date = bloc.querySelector('input[type=date]');
-  if (e.target === caseEtape) {
-    date.value = caseEtape.checked ? (date.value || cleDate(new Date())) : '';
-    // Un nouvel envoi répond au client : « Le client a répondu » est décoché.
-    if (caseEtape.checked && bloc.dataset.etape !== 'rdv' && $('#reponse-case').checked) { $('#reponse-case').checked = false; majReponse(); }
-    // Validation du client : la commande passe de « Devis » à « Confirmée ».
+  if (bloc.dataset.etape === 'avis') {
+    // Accepté et À modifier ne peuvent pas être cochés ensemble.
+    if (e.target.checked) for (const autre of bloc.querySelectorAll('[data-avis]')) if (autre !== e.target) autre.checked = false;
+    date.value = e.target.checked ? cleDate(new Date()) : '';
+  } else {
+    date.value = e.target.checked ? (date.value || cleDate(new Date())) : '';
+    // Devis validé par le client : la commande passe de « Devis » à « Confirmée ».
     const statut = formulaire().elements.statut;
-    if (bloc.dataset.etape === 'validation' && caseEtape.checked && statut.value === 'devis') statut.value = 'confirmee';
+    if (bloc.dataset.etape === 'validation' && e.target.checked && statut.value === 'devis') statut.value = 'confirmee';
   }
   majEtape(bloc);
 }
 
-function afficherReponse(r) {
-  $('#reponse-case').checked = !!(r && r.date);
-  $('#reponse-date').value = (r && r.date) || '';
-  $('#reponse-note').value = (r && r.note) || '';
-  majReponse();
+/* « Moodboard renvoyé » : nouvelle date d'envoi, on attend à nouveau le retour du client. */
+function moodboardRenvoye() {
+  const envoi = $('#etapes [data-etape=moodboard]');
+  envoi.querySelector('input[type=checkbox]').checked = true;
+  envoi.querySelector('input[type=date]').value = cleDate(new Date());
+  majEtape(envoi);
+  const avis = $('#etapes [data-etape=avis]');
+  for (const c of avis.querySelectorAll('[data-avis]')) c.checked = false;
+  avis.querySelector('input[type=date]').value = '';
+  majEtape(avis);
+  messageFlottant('Moodboard renvoyé aujourd’hui : pensez à enregistrer');
 }
-function majReponse() {
-  const oui = $('#reponse-case').checked;
-  $('#reponse-client').classList.toggle('faite', oui);
-  if (oui && !$('#reponse-date').value) $('#reponse-date').value = cleDate(new Date());
-  if (!oui) { $('#reponse-date').value = ''; $('#reponse-note').value = ''; }
-}
-function lireReponse() {
-  return $('#reponse-case').checked
-    ? { date: $('#reponse-date').value || cleDate(new Date()), note: $('#reponse-note').value.trim() }
-    : { date: '', note: '' };
+
+function lireEtapes() {
+  const et = { ...ETAPES_VIDES };
+  for (const e of ETAPES_SIMPLES) {
+    const bloc = $(`#etapes [data-etape=${e.id}]`);
+    et[e.id] = bloc.querySelector('input[type=checkbox]').checked ? (bloc.querySelector('input[type=date]').value || cleDate(new Date())) : '';
+  }
+  const avis = $('#etapes [data-etape=avis]');
+  const date = avis.querySelector('input[type=date]').value || cleDate(new Date());
+  if (avis.querySelector('[data-avis=accepte]').checked) et.moodboardAccepte = date;
+  else if (avis.querySelector('[data-avis=modifier]').checked) et.moodboardAModifier = date;
+  return et;
 }
 
 /* ---------- Liste de tâches (pleine page, en colonnes) ---------- */
 
 const COLONNES_TACHES = [
   { id: 'nouvelles', titre: 'Nouvelles demandes', aide: 'Rendez-vous à fixer avec le client' },
-  { id: 'moi', titre: 'En attente de ma part', aide: "C'est à vous de jouer" },
+  { id: 'moi', titre: 'À faire', aide: "L'étape suivante est pour vous" },
   { id: 'client', titre: 'En attente du client', aide: 'Vous avez envoyé, le client doit répondre' },
   { id: 'valide', titre: 'Validés', aide: 'Le client a dit oui' },
 ];
@@ -787,12 +829,6 @@ const DELAI_RELANCE_DEFAUT = 7;
 
 function delaiRelance() { return Number(Stockage.lireReglage('delaiRelance')) || DELAI_RELANCE_DEFAUT; }
 
-/* Dernière étape cochée d'une commande. */
-function derniereEtape(c) {
-  const et = c.etapes || {};
-  for (let i = ETAPES.length - 1; i >= 0; i--) if (et[ETAPES[i].id]) return { etape: ETAPES[i], date: et[ETAPES[i].id] };
-  return null;
-}
 function joursDepuis(cle) { return Math.round((dateDepuisCle(cleDate(new Date())) - dateDepuisCle(cle)) / 864e5); }
 function depuis(cle) {
   const n = joursDepuis(cle);
@@ -801,20 +837,23 @@ function depuis(cle) {
   return `il y a ${n} jours`;
 }
 
-/* Où se trouve la commande : colonne, étiquette éventuelle, texte de suivi, relance. */
+/* Où se trouve la commande : colonne, étiquette (l'étape suivante), texte de suivi, relance. */
 function etatTache(c) {
-  const d = derniereEtape(c);
-  const r = c.reponseClient || {};
-  if ((d && d.etape.id === 'validation') || (!d && ['confirmee', 'preparation', 'livree'].includes(c.statut))) {
-    return { colonne: 'valide', texte: d ? `Validé le ${dateCourte(d.date)}` : 'Commande confirmée' };
+  const et = c.etapes || {};
+  const aucune = !Object.values(et).some(Boolean);
+  const attente = (texte, date) => {
+    const relance = joursDepuis(date) >= delaiRelance();
+    return { colonne: 'client', texte: `${texte} ${dateCourte(date)} · ${depuis(date)}${relance ? ', à relancer' : ''}`, relance };
+  };
+  if (et.validation || (aucune && ['confirmee', 'preparation', 'livree'].includes(c.statut))) {
+    return { colonne: 'valide', texte: et.validation ? `Devis validé le ${dateCourte(et.validation)}` : 'Commande confirmée' };
   }
-  if (!d) return { colonne: 'nouvelles', texte: c.creeLe ? `Demande saisie le ${dateCourte(c.creeLe.slice(0, 10))}` : 'Rendez-vous à fixer' };
-  if (r.date) {
-    return { colonne: 'moi', etiquette: 'Le client a répondu', classe: 'm-rep', texte: `${r.note ? echapper(r.note) + ', le' : 'Réponse reçue le'} ${dateCourte(r.date)}` };
-  }
-  if (d.etape.id === 'rdv') return { colonne: 'moi', etiquette: 'Moodboard à envoyer', classe: 'm-moi', texte: `Rendez-vous fait le ${dateCourte(d.date)}` };
-  const relance = joursDepuis(d.date) >= delaiRelance();
-  return { colonne: 'client', relance, texte: `${d.etape.fait} ${dateCourte(d.date)} · ${depuis(d.date)}${relance ? ', à relancer' : ''}` };
+  if (aucune) return { colonne: 'nouvelles', etiquette: 'Rendez-vous à fixer', classe: 'm-nouveau', texte: c.creeLe ? `Demande saisie le ${dateCourte(c.creeLe.slice(0, 10))}` : 'Nouvelle demande' };
+  if (et.devis) return attente('Devis envoyé le', et.devis);
+  if (et.moodboardAccepte) return { colonne: 'moi', etiquette: 'Devis à envoyer', classe: 'm-moi', texte: `Moodboard accepté le ${dateCourte(et.moodboardAccepte)}` };
+  if (et.moodboardAModifier) return { colonne: 'moi', etiquette: 'Moodboard à modifier', classe: 'm-modif', texte: `Demandé le ${dateCourte(et.moodboardAModifier)}` };
+  if (et.moodboard) return attente('Moodboard envoyé le', et.moodboard);
+  return { colonne: 'moi', etiquette: 'Moodboard à envoyer', classe: 'm-moi', texte: `Rendez-vous fait le ${dateCourte(et.rdv)}` };
 }
 
 let filtreTaches = '';
@@ -962,7 +1001,7 @@ function brancher() {
     const carte = e.target.closest('.carte-tache');
     if (carte) ouvrirFicheParId(carte.dataset.id);
   });
-  $('#reponse-case').addEventListener('change', majReponse);
+  $('#etapes').addEventListener('click', (e) => { if (e.target.closest('#moodboard-renvoye')) moodboardRenvoye(); });
   $('#etapes').addEventListener('change', changerEtape);
   $('#semaine-precedente').onclick = () => { debutSemaine = ajouterJours(debutSemaine, -7); afficherFleurs(); };
   $('#semaine-suivante').onclick = () => { debutSemaine = ajouterJours(debutSemaine, 7); afficherFleurs(); };

@@ -95,15 +95,16 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
   - **Commande fleuriste** : les fleurs à commander chez le grossiste (fleur, couleur, quantité en tiges, bottes ou pots),
     avec un rappel de la demande.
   Le bouton **Imprimer** imprime l'onglet affiché (page A4).
-- **Suivi** (colonne de gauche de chaque fiche) : cochez au fur et à mesure **1. Premier rendez-vous**,
-  **2. Moodboard envoyé**, **3. Devis envoyé** et **4. Validation client**. Une étape cochée affiche « Fait le » et la date
-  du jour, que vous pouvez modifier ; une étape non cochée affiche « À faire ». Quand vous cochez « Validation client »,
-  une commande au statut « Devis » passe en « Confirmée ».
-  Cochez **Le client a répondu** quand le client vous répond (vous pouvez noter ce qu'il demande) : la commande passe
-  « En attente de ma part ». Elle se décoche toute seule quand vous cochez l'envoi suivant.
+- **Suivi** (colonne de gauche de chaque fiche), en 5 étapes à cocher au fur et à mesure :
+  **1. Premier rendez-vous**, **2. Moodboard envoyé**, **3. Retour du client sur le moodboard** (« Accepté » ou
+  « À modifier »), **4. Devis envoyé**, **5. Devis validé par le client**. Une étape cochée affiche « Fait le » et la date
+  du jour, que vous pouvez modifier ; une étape non cochée affiche « À faire ».
+  Si le moodboard est « À modifier », un bouton **Moodboard renvoyé** apparaît : cliquez dessus quand vous avez renvoyé
+  le moodboard corrigé (la date d'envoi se met à jour). Quand vous cochez « Devis validé », une commande au statut
+  « Devis » passe en « Confirmée ».
 - **Liste de tâches** : Menu → « Liste de tâches » s'affiche en pleine page, en quatre colonnes :
-  **Nouvelles demandes** (aucune étape cochée : rendez-vous à fixer), **En attente de ma part** (moodboard à envoyer,
-  ou le client a répondu), **En attente du client** (moodboard ou devis envoyé) et **Validés**.
+  **Nouvelles demandes** (rendez-vous à fixer), **À faire** (l'étape suivante pour vous : moodboard à envoyer,
+  moodboard à modifier, devis à envoyer), **En attente du client** (moodboard ou devis envoyé) et **Validés**.
   Un envoi sans réponse depuis 7 jours passe en rouge « à relancer » (nombre de jours réglable en haut de la page).
   Le choix « Évènements » n'affiche qu'un type, par exemple les mariages. Cliquez sur une carte pour ouvrir la fiche.
   La liste peut s'imprimer. « Retour au calendrier » ramène au calendrier.
