@@ -519,7 +519,7 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
 .reglage-taches { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 13px; color: var(--texte-doux); }
 .reglage-taches select { width: auto; }
 .reglage-taches input { width: 64px !important; text-align: center; }
-.colonnes-taches { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.colonnes-taches { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
 .colonne-tache { background: #F2ECE6; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; min-height: 0; }
 .colonne-tache h2 { font-family: var(--serif); font-weight: 600; font-size: 23px; display: flex; align-items: center; gap: 10px; padding: 2px 4px; margin: 0; }
 .aide-colonne { font-size: 12.5px; color: var(--texte-doux); padding: 0 4px; margin: 0 0 10px; }
@@ -527,6 +527,9 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
 .colonne-moi h2 { color: #8E5219; }
 .colonne-client h2 { color: #2E5A86; }
 .colonne-valide h2 { color: #2F6A2C; }
+.colonne-livrer h2 { color: #6B4A2B; }
+.colonne-livrer .carte-etat strong { font-weight: 600; color: var(--texte); }
+.aide-champ { font-size: 12px; font-weight: 400; color: var(--texte-doux); }
 .compte { font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--texte-doux); background: #fff; border-radius: 10px; padding: 1px 8px; }
 .cartes { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 1px; }
 .carte-tache {
@@ -534,7 +537,7 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
   background: #fff; border: 0; border-left: 4px solid var(--trait-type); border-radius: 8px; padding: 11px 13px; box-shadow: 0 1px 2px rgba(60,20,30,.06);
 }
 .carte-tache:hover { box-shadow: 0 2px 10px rgba(60,20,30,.12); }
-.carte-ligne { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; }
+.carte-ligne { display: flex; justify-content: space-between; gap: 4px 8px; font-size: 15px; flex-wrap: wrap; }
 .carte-ligne strong { font-weight: 500; }
 .carte-date { font-size: 13px; color: var(--texte-doux); white-space: nowrap; }
 .carte-type { font-size: 13px; color: var(--texte-doux); margin-top: 2px; }
@@ -742,6 +745,8 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
             <label class="si-autre">Précision (facultatif)<input name="typePrecision" autocomplete="off" placeholder="Ex. : 50 ans, inauguration…"></label>
             <label>Date *<input name="date" type="date" required></label>
             <label>Heure<input name="heure" type="time"></label>
+            <label>Date d'installation<input name="dateInstallation" type="date"><small class="aide-champ">Laissez vide si c'est le jour de l'évènement.</small></label>
+            <label>Heure d'installation<input name="heureInstallation" type="time"></label>
             <label class="large">Lieu<input name="lieu" autocomplete="off" placeholder="Salle, église, adresse…"></label>
             <fieldset class="large choix">
               <legend>Remise des fleurs</legend>
@@ -1431,7 +1436,7 @@ function dateLongue(cle) {
 }
 function dateCourte(cle) {
   const d = dateDepuisCle(cle);
-  return `${JOURS[d.getDay()].slice(0, 3)}. ${d.getDate()} ${MOIS[d.getMonth()]}`;
+  return `${JOURS[d.getDay()].slice(0, 3)}. ${d.getDate()} ${MOIS[d.getMonth()]} ${d.getFullYear()}`;
 }
 function euros(n) { return Number(n).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }); }
 function trier(liste) {
@@ -1557,7 +1562,7 @@ const formulaire = () => $('#fiche');
 function commandeVide(date) {
   return {
     id: null, nom: '', prenom: '', telephone: '', email: '',
-    type: 'mariage', typePrecision: '', date: date || cleDate(new Date()), heure: '', lieu: '', mode: 'livraison',
+    type: 'mariage', typePrecision: '', date: date || cleDate(new Date()), heure: '', dateInstallation: '', heureInstallation: '', lieu: '', mode: 'livraison',
     description: '', fleurs: '', couleurs: '', compositions: [], fleursCommande: [],
     inspirations: [], moodboard: [], moodboardNotes: '',
     statut: 'devis', prix: '', acompte: '', notesInternes: '',
@@ -1565,7 +1570,7 @@ function commandeVide(date) {
   };
 }
 
-const CHAMPS_TEXTE = ['nom', 'prenom', 'telephone', 'email', 'type', 'typePrecision', 'date', 'heure', 'lieu',
+const CHAMPS_TEXTE = ['nom', 'prenom', 'telephone', 'email', 'type', 'typePrecision', 'date', 'heure', 'dateInstallation', 'heureInstallation', 'lieu',
   'description', 'fleurs', 'couleurs', 'moodboardNotes', 'statut', 'prix', 'acompte', 'notesInternes'];
 
 function ouvrirFiche(commande) {
@@ -1975,6 +1980,14 @@ function enteteImpression(titre, sousTitre) {
 
 function texteMultiligne(t) { return echapper(t).replace(/\n/g, '<br>'); }
 
+/* Date d'installation : celle saisie, sinon le jour de l'évènement. */
+function dateInstallation(c) { return c.dateInstallation || c.date; }
+function heureInstallation(c) { return c.dateInstallation ? c.heureInstallation : (c.heureInstallation || c.heure); }
+function texteInstallation(c) {
+  const h = heureInstallation(c);
+  return dateInstallation(c) ? `${dateLongue(dateInstallation(c))}${h ? ' à ' + h : ''}` : '';
+}
+
 function enTeteClient(c) {
   return `<div class="imp-client">${echapper(nomClient(c))}</div>
     <div class="imp-evenement"><span class="imp-type t-${typeDe(c)}">${echapper(libelleType(c))}</span>
@@ -2000,6 +2013,7 @@ function imprimerDemande(c) {
         ${ligneInfo('Téléphone', echapper(c.telephone))}
         ${ligneInfo('E-mail', echapper(c.email))}
         ${ligneInfo('Lieu', echapper(c.lieu))}
+        ${ligneInfo('Installation', echapper(texteInstallation(c)))}
         ${ligneInfo('Remise', c.mode === 'retrait' ? 'Retrait en magasin' : 'Livraison')}
       </table>
       <table class="imp-infos">
@@ -2188,7 +2202,9 @@ const COLONNES_TACHES = [
   { id: 'moi', titre: 'À faire', aide: "L'étape suivante est pour vous" },
   { id: 'client', titre: 'En attente du client', aide: 'Vous avez envoyé, le client doit répondre' },
   { id: 'valide', titre: 'Validés', aide: 'Le client a dit oui' },
+  { id: 'livrer', titre: 'À livrer', aide: 'Installation dans les 14 prochains jours' },
 ];
+const JOURS_A_LIVRER = 14;
 const DELAI_RELANCE_DEFAUT = 7;
 
 function delaiRelance() { return Number(Stockage.lireReglage('delaiRelance')) || DELAI_RELANCE_DEFAUT; }
@@ -2210,6 +2226,12 @@ function etatTache(c) {
     return { colonne: 'client', texte: `${texte} ${dateCourte(date)} · ${depuis(date)}${relance ? ', à relancer' : ''}`, relance };
   };
   if (et.validation || (aucune && ['confirmee', 'preparation', 'livree'].includes(c.statut))) {
+    const jours = -joursDepuis(dateInstallation(c));
+    if (jours <= JOURS_A_LIVRER) {
+      const h = heureInstallation(c);
+      return { colonne: 'livrer', installation: true,
+        texte: `<strong>Installation le ${dateCourte(dateInstallation(c))}${h ? ' à ' + echapper(h) : ''}</strong> · ${jours <= 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}` };
+    }
     return { colonne: 'valide', texte: et.validation ? `Devis validé le ${dateCourte(et.validation)}` : 'Commande confirmée' };
   }
   if (aucune) return { colonne: 'nouvelles', etiquette: 'Rendez-vous à fixer', classe: 'm-nouveau', texte: c.creeLe ? `Demande saisie le ${dateCourte(c.creeLe.slice(0, 10))}` : 'Nouvelle demande' };
@@ -2226,7 +2248,13 @@ function calculerTaches() {
   const auj = cleDate(new Date());
   const liste = trier(commandes.filter((c) => c.date >= auj && c.statut !== 'annulee' && c.statut !== 'livree'
     && (!filtreTaches || typeDe(c) === filtreTaches)));
-  return COLONNES_TACHES.map((col) => ({ ...col, liste: liste.map((c) => ({ c, e: etatTache(c) })).filter((x) => x.e.colonne === col.id) }));
+  const cle = (c) => dateInstallation(c) + ' ' + (heureInstallation(c) || '99:99');
+  return COLONNES_TACHES.map((col) => {
+    const l = liste.map((c) => ({ c, e: etatTache(c) })).filter((x) => x.e.colonne === col.id);
+    // À livrer : par ordre chronologique d'installation.
+    if (col.id === 'livrer') l.sort((a, b) => cle(a.c).localeCompare(cle(b.c)));
+    return { ...col, liste: l };
+  });
 }
 
 function carteTache({ c, e }) {

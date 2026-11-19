@@ -67,7 +67,7 @@ function dateLongue(cle) {
 }
 function dateCourte(cle) {
   const d = dateDepuisCle(cle);
-  return `${JOURS[d.getDay()].slice(0, 3)}. ${d.getDate()} ${MOIS[d.getMonth()]}`;
+  return `${JOURS[d.getDay()].slice(0, 3)}. ${d.getDate()} ${MOIS[d.getMonth()]} ${d.getFullYear()}`;
 }
 function euros(n) { return Number(n).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }); }
 function trier(liste) {
@@ -193,7 +193,7 @@ const formulaire = () => $('#fiche');
 function commandeVide(date) {
   return {
     id: null, nom: '', prenom: '', telephone: '', email: '',
-    type: 'mariage', typePrecision: '', date: date || cleDate(new Date()), heure: '', lieu: '', mode: 'livraison',
+    type: 'mariage', typePrecision: '', date: date || cleDate(new Date()), heure: '', dateInstallation: '', heureInstallation: '', lieu: '', mode: 'livraison',
     description: '', fleurs: '', couleurs: '', compositions: [], fleursCommande: [],
     inspirations: [], moodboard: [], moodboardNotes: '',
     statut: 'devis', prix: '', acompte: '', notesInternes: '',
@@ -201,7 +201,7 @@ function commandeVide(date) {
   };
 }
 
-const CHAMPS_TEXTE = ['nom', 'prenom', 'telephone', 'email', 'type', 'typePrecision', 'date', 'heure', 'lieu',
+const CHAMPS_TEXTE = ['nom', 'prenom', 'telephone', 'email', 'type', 'typePrecision', 'date', 'heure', 'dateInstallation', 'heureInstallation', 'lieu',
   'description', 'fleurs', 'couleurs', 'moodboardNotes', 'statut', 'prix', 'acompte', 'notesInternes'];
 
 function ouvrirFiche(commande) {
@@ -611,6 +611,14 @@ function enteteImpression(titre, sousTitre) {
 
 function texteMultiligne(t) { return echapper(t).replace(/\n/g, '<br>'); }
 
+/* Date d'installation : celle saisie, sinon le jour de l'évènement. */
+function dateInstallation(c) { return c.dateInstallation || c.date; }
+function heureInstallation(c) { return c.dateInstallation ? c.heureInstallation : (c.heureInstallation || c.heure); }
+function texteInstallation(c) {
+  const h = heureInstallation(c);
+  return dateInstallation(c) ? `${dateLongue(dateInstallation(c))}${h ? ' à ' + h : ''}` : '';
+}
+
 function enTeteClient(c) {
   return `<div class="imp-client">${echapper(nomClient(c))}</div>
     <div class="imp-evenement"><span class="imp-type t-${typeDe(c)}">${echapper(libelleType(c))}</span>
@@ -636,6 +644,7 @@ function imprimerDemande(c) {
         ${ligneInfo('Téléphone', echapper(c.telephone))}
         ${ligneInfo('E-mail', echapper(c.email))}
         ${ligneInfo('Lieu', echapper(c.lieu))}
+        ${ligneInfo('Installation', echapper(texteInstallation(c)))}
         ${ligneInfo('Remise', c.mode === 'retrait' ? 'Retrait en magasin' : 'Livraison')}
       </table>
       <table class="imp-infos">
@@ -824,7 +833,9 @@ const COLONNES_TACHES = [
   { id: 'moi', titre: 'À faire', aide: "L'étape suivante est pour vous" },
   { id: 'client', titre: 'En attente du client', aide: 'Vous avez envoyé, le client doit répondre' },
   { id: 'valide', titre: 'Validés', aide: 'Le client a dit oui' },
+  { id: 'livrer', titre: 'À livrer', aide: 'Installation dans les 14 prochains jours' },
 ];
+const JOURS_A_LIVRER = 14;
 const DELAI_RELANCE_DEFAUT = 7;
 
 function delaiRelance() { return Number(Stockage.lireReglage('delaiRelance')) || DELAI_RELANCE_DEFAUT; }
@@ -846,6 +857,12 @@ function etatTache(c) {
     return { colonne: 'client', texte: `${texte} ${dateCourte(date)} · ${depuis(date)}${relance ? ', à relancer' : ''}`, relance };
   };
   if (et.validation || (aucune && ['confirmee', 'preparation', 'livree'].includes(c.statut))) {
+    const jours = -joursDepuis(dateInstallation(c));
+    if (jours <= JOURS_A_LIVRER) {
+      const h = heureInstallation(c);
+      return { colonne: 'livrer', installation: true,
+        texte: `<strong>Installation le ${dateCourte(dateInstallation(c))}${h ? ' à ' + echapper(h) : ''}</strong> · ${jours <= 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}` };
+    }
     return { colonne: 'valide', texte: et.validation ? `Devis validé le ${dateCourte(et.validation)}` : 'Commande confirmée' };
   }
   if (aucune) return { colonne: 'nouvelles', etiquette: 'Rendez-vous à fixer', classe: 'm-nouveau', texte: c.creeLe ? `Demande saisie le ${dateCourte(c.creeLe.slice(0, 10))}` : 'Nouvelle demande' };
@@ -862,7 +879,13 @@ function calculerTaches() {
   const auj = cleDate(new Date());
   const liste = trier(commandes.filter((c) => c.date >= auj && c.statut !== 'annulee' && c.statut !== 'livree'
     && (!filtreTaches || typeDe(c) === filtreTaches)));
-  return COLONNES_TACHES.map((col) => ({ ...col, liste: liste.map((c) => ({ c, e: etatTache(c) })).filter((x) => x.e.colonne === col.id) }));
+  const cle = (c) => dateInstallation(c) + ' ' + (heureInstallation(c) || '99:99');
+  return COLONNES_TACHES.map((col) => {
+    const l = liste.map((c) => ({ c, e: etatTache(c) })).filter((x) => x.e.colonne === col.id);
+    // À livrer : par ordre chronologique d'installation.
+    if (col.id === 'livrer') l.sort((a, b) => cle(a.c).localeCompare(cle(b.c)));
+    return { ...col, liste: l };
+  });
 }
 
 function carteTache({ c, e }) {

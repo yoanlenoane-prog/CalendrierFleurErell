@@ -88,6 +88,8 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
 - **Calendrier** : vue du mois, semaine du lundi au dimanche, flèches ‹ › pour changer de mois, bouton « Aujourd'hui ».
   Le mois tient sur un seul écran : si un jour a trop de commandes, cliquez sur « + N autres ».
   Une commande annulée apparaît barrée.
+- **Date d'installation** : dans la fiche, sous la date de l'évènement. Laissez-la vide si l'installation a lieu
+  le jour de l'évènement.
 - **Nouvelle commande** : cliquez sur un jour, ou Menu → « Nouvelle commande ».
 - **Fiche** : cliquez sur une commande. Elle a trois onglets :
   - **Demande client** : coordonnées, évènement, demande, compositions, photos d'inspiration, suivi et prix ;
@@ -104,7 +106,9 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
   « Devis » passe en « Confirmée ».
 - **Liste de tâches** : Menu → « Liste de tâches » s'affiche en pleine page, en quatre colonnes :
   **Nouvelles demandes** (rendez-vous à fixer), **À faire** (l'étape suivante pour vous : moodboard à envoyer,
-  moodboard à modifier, devis à envoyer), **En attente du client** (moodboard ou devis envoyé) et **Validés**.
+  moodboard à modifier, devis à envoyer), **En attente du client** (moodboard ou devis envoyé), **Validés** et
+  **À livrer** (commandes validées dont l'installation a lieu dans les 14 prochains jours, classées par date
+  d'installation).
   Un envoi sans réponse depuis 7 jours passe en rouge « à relancer » (nombre de jours réglable en haut de la page).
   Le choix « Évènements » n'affiche qu'un type, par exemple les mariages. Cliquez sur une carte pour ouvrir la fiche.
   La liste peut s'imprimer. « Retour au calendrier » ramène au calendrier.
