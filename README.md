@@ -107,7 +107,8 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
 - **Liste de tâches** : Menu → « Liste de tâches » s'affiche en pleine page, en quatre colonnes :
   **Nouvelles demandes** (rendez-vous à fixer), **À faire** (l'étape suivante pour vous : moodboard à envoyer,
   moodboard à modifier, devis à envoyer), **En attente du client** (moodboard ou devis envoyé), **Validés** et
-  **À livrer** (commandes validées dont l'installation a lieu dans les 14 prochains jours, classées par date
+  **À livrer** (commandes validées dont l'installation a lieu dans les 14 prochains jours, nombre réglable en haut
+  de la page, classées par date
   d'installation).
   Un envoi sans réponse depuis 7 jours passe en rouge « à relancer » (nombre de jours réglable en haut de la page).
   Le choix « Évènements » n'affiche qu'un type, par exemple les mariages. Cliquez sur une carte pour ouvrir la fiche.

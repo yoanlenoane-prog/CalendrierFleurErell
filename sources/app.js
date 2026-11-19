@@ -835,7 +835,8 @@ const COLONNES_TACHES = [
   { id: 'valide', titre: 'Validés', aide: 'Le client a dit oui' },
   { id: 'livrer', titre: 'À livrer', aide: 'Installation dans les 14 prochains jours' },
 ];
-const JOURS_A_LIVRER = 14;
+const JOURS_A_LIVRER_DEFAUT = 14;
+function joursALivrer() { return Number(Stockage.lireReglage('joursALivrer')) || JOURS_A_LIVRER_DEFAUT; }
 const DELAI_RELANCE_DEFAUT = 7;
 
 function delaiRelance() { return Number(Stockage.lireReglage('delaiRelance')) || DELAI_RELANCE_DEFAUT; }
@@ -858,7 +859,7 @@ function etatTache(c) {
   };
   if (et.validation || (aucune && ['confirmee', 'preparation', 'livree'].includes(c.statut))) {
     const jours = -joursDepuis(dateInstallation(c));
-    if (jours <= JOURS_A_LIVRER) {
+    if (jours <= joursALivrer()) {
       const h = heureInstallation(c);
       return { colonne: 'livrer', installation: true,
         texte: `<strong>Installation le ${dateCourte(dateInstallation(c))}${h ? ' à ' + echapper(h) : ''}</strong> · ${jours <= 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}` };
@@ -901,7 +902,7 @@ function afficherTaches() {
   $('#contenu-taches').innerHTML = calculerTaches().map((col) => `
     <section class="colonne-tache colonne-${col.id}">
       <h2>${col.titre} <span class="compte">${col.liste.length}</span></h2>
-      <p class="aide-colonne">${col.aide}</p>
+      <p class="aide-colonne">${col.id === 'livrer' ? `Installation dans les ${joursALivrer()} prochains jours` : col.aide}</p>
       <div class="cartes">${col.liste.length ? col.liste.map(carteTache).join('') : '<p class="vide-groupe">Aucun évènement.</p>'}</div>
     </section>`).join('');
 }
@@ -911,6 +912,7 @@ function ouvrirTaches() {
   if (!types.some((t) => t.id === filtreTaches)) filtreTaches = '';
   $('#filtre-taches').value = filtreTaches;
   $('#delai-relance').value = delaiRelance();
+  $('#jours-a-livrer').value = joursALivrer();
   afficherTaches();
   $('.principal').hidden = true;
   $('#page-taches').hidden = false;
@@ -1017,6 +1019,12 @@ function brancher() {
     const n = Math.max(1, Math.min(90, parseInt(e.target.value, 10) || DELAI_RELANCE_DEFAUT));
     e.target.value = n;
     await Stockage.ecrireReglage('delaiRelance', n);
+    afficherTaches();
+  };
+  $('#jours-a-livrer').onchange = async (e) => {
+    const n = Math.max(1, Math.min(90, parseInt(e.target.value, 10) || JOURS_A_LIVRER_DEFAUT));
+    e.target.value = n;
+    await Stockage.ecrireReglage('joursALivrer', n);
     afficherTaches();
   };
   $('#imprimer-taches').onclick = imprimerTaches;

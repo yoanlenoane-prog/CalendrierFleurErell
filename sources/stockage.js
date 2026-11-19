@@ -105,6 +105,7 @@ const Stockage = (() => {
       derniereSauvegarde: await idbLire('reglages', 'derniereSauvegarde'),
       initialise: await idbLire('reglages', 'initialise'),
       delaiRelance: await idbLire('reglages', 'delaiRelance'),
+      joursALivrer: await idbLire('reglages', 'joursALivrer'),
     };
     images.clear();
     await new Promise((resolve, reject) => {
@@ -174,7 +175,7 @@ const Stockage = (() => {
         await ecrireFichier(dossier, 'reglages.json', JSON.stringify(reglages, null, 2));
       } else {
         await transaction(['reglages'], 'readwrite', (tx) => {
-          for (const cle of ['types', 'derniereSauvegarde', 'initialise', 'delaiRelance']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
+          for (const cle of ['types', 'derniereSauvegarde', 'initialise', 'delaiRelance', 'joursALivrer']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
         });
       }
     });

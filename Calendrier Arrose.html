@@ -664,6 +664,7 @@ button.supprimer-type:hover { color: #A3262B; border-color: #E3BFC1; }
       <h1>Liste de tâches</h1>
       <span class="espace"></span>
       <label class="reglage-taches">Relance après <input type="number" id="delai-relance" min="1" max="90" step="1"> jours</label>
+      <label class="reglage-taches">À livrer : <input type="number" id="jours-a-livrer" min="1" max="90" step="1"> jours avant</label>
       <label class="reglage-taches">Évènements <select id="filtre-taches"></select></label>
       <button type="button" class="btn btn-contour" id="imprimer-taches">
         <svg class="icone" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z"/></svg>Imprimer</button>
@@ -1069,6 +1070,7 @@ const Stockage = (() => {
       derniereSauvegarde: await idbLire('reglages', 'derniereSauvegarde'),
       initialise: await idbLire('reglages', 'initialise'),
       delaiRelance: await idbLire('reglages', 'delaiRelance'),
+      joursALivrer: await idbLire('reglages', 'joursALivrer'),
     };
     images.clear();
     await new Promise((resolve, reject) => {
@@ -1138,7 +1140,7 @@ const Stockage = (() => {
         await ecrireFichier(dossier, 'reglages.json', JSON.stringify(reglages, null, 2));
       } else {
         await transaction(['reglages'], 'readwrite', (tx) => {
-          for (const cle of ['types', 'derniereSauvegarde', 'initialise', 'delaiRelance']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
+          for (const cle of ['types', 'derniereSauvegarde', 'initialise', 'delaiRelance', 'joursALivrer']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
         });
       }
     });
@@ -2204,7 +2206,8 @@ const COLONNES_TACHES = [
   { id: 'valide', titre: 'Validés', aide: 'Le client a dit oui' },
   { id: 'livrer', titre: 'À livrer', aide: 'Installation dans les 14 prochains jours' },
 ];
-const JOURS_A_LIVRER = 14;
+const JOURS_A_LIVRER_DEFAUT = 14;
+function joursALivrer() { return Number(Stockage.lireReglage('joursALivrer')) || JOURS_A_LIVRER_DEFAUT; }
 const DELAI_RELANCE_DEFAUT = 7;
 
 function delaiRelance() { return Number(Stockage.lireReglage('delaiRelance')) || DELAI_RELANCE_DEFAUT; }
@@ -2227,7 +2230,7 @@ function etatTache(c) {
   };
   if (et.validation || (aucune && ['confirmee', 'preparation', 'livree'].includes(c.statut))) {
     const jours = -joursDepuis(dateInstallation(c));
-    if (jours <= JOURS_A_LIVRER) {
+    if (jours <= joursALivrer()) {
       const h = heureInstallation(c);
       return { colonne: 'livrer', installation: true,
         texte: `<strong>Installation le ${dateCourte(dateInstallation(c))}${h ? ' à ' + echapper(h) : ''}</strong> · ${jours <= 0 ? "aujourd'hui" : jours === 1 ? 'demain' : `dans ${jours} jours`}` };
@@ -2270,7 +2273,7 @@ function afficherTaches() {
   $('#contenu-taches').innerHTML = calculerTaches().map((col) => `
     <section class="colonne-tache colonne-${col.id}">
       <h2>${col.titre} <span class="compte">${col.liste.length}</span></h2>
-      <p class="aide-colonne">${col.aide}</p>
+      <p class="aide-colonne">${col.id === 'livrer' ? `Installation dans les ${joursALivrer()} prochains jours` : col.aide}</p>
       <div class="cartes">${col.liste.length ? col.liste.map(carteTache).join('') : '<p class="vide-groupe">Aucun évènement.</p>'}</div>
     </section>`).join('');
 }
@@ -2280,6 +2283,7 @@ function ouvrirTaches() {
   if (!types.some((t) => t.id === filtreTaches)) filtreTaches = '';
   $('#filtre-taches').value = filtreTaches;
   $('#delai-relance').value = delaiRelance();
+  $('#jours-a-livrer').value = joursALivrer();
   afficherTaches();
   $('.principal').hidden = true;
   $('#page-taches').hidden = false;
@@ -2386,6 +2390,12 @@ function brancher() {
     const n = Math.max(1, Math.min(90, parseInt(e.target.value, 10) || DELAI_RELANCE_DEFAUT));
     e.target.value = n;
     await Stockage.ecrireReglage('delaiRelance', n);
+    afficherTaches();
+  };
+  $('#jours-a-livrer').onchange = async (e) => {
+    const n = Math.max(1, Math.min(90, parseInt(e.target.value, 10) || JOURS_A_LIVRER_DEFAUT));
+    e.target.value = n;
+    await Stockage.ecrireReglage('joursALivrer', n);
     afficherTaches();
   };
   $('#imprimer-taches').onclick = imprimerTaches;
