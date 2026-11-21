@@ -542,11 +542,11 @@ function majDrive() {
 
   const textes = {
     indisponible: 'La sauvegarde dans Google Drive fonctionne avec la version en ligne du calendrier (adresse internet), pas avec le fichier ouvert depuis l’ordinateur.',
-    deconnecte: 'Connectez le compte Google de la boutique : vos commandes, réglages, photos et PDF seront recopiés automatiquement dans le dossier <strong>Calendrier Arrosé</strong> de son Google Drive, quelques secondes après chaque modification.',
-    reconnecter: 'La connexion à Google a expiré. Vos modifications sont gardées sur cet ordinateur : cliquez sur « Se reconnecter » pour les envoyer.',
+    deconnecte: `Connectez le compte Google de la boutique : vos commandes, réglages, photos et PDF seront recopiés automatiquement dans le dossier <strong>${echapper(Drive.nomDossier())}</strong> de son Google Drive, quelques secondes après chaque modification.`,
+    reconnecter: 'Google demande de vous reconnecter. Vos modifications sont gardées sur cet ordinateur : cliquez sur « Se reconnecter » pour les envoyer.',
     horsligne: 'Pas de connexion internet. Vos modifications sont gardées sur cet ordinateur et partiront dans Google Drive au retour du réseau.',
-    synchro: 'Envoi en cours vers le dossier <strong>Calendrier Arrosé</strong> de Google Drive…',
-    ok: `Tout est enregistré dans le dossier <strong>Calendrier Arrosé</strong> de Google Drive${derniere ? ` (dernier envoi ${quand(derniere)})` : ''}. Chaque modification y est envoyée automatiquement.`,
+    synchro: `Envoi en cours vers le dossier <strong>${echapper(Drive.nomDossier())}</strong> de Google Drive…`,
+    ok: `Tout est enregistré dans le dossier <strong>${echapper(Drive.nomDossier())}</strong> de Google Drive${derniere ? ` (dernier envoi ${quand(derniere)})` : ''}. Chaque modification y est envoyée automatiquement.`,
     erreur: `L’envoi vers Google Drive n’a pas abouti : ${echapper(Drive.detail())}. Vos modifications sont gardées sur cet ordinateur ; un nouvel essai aura lieu dans quelques minutes.`,
   };
   $('#info-drive').innerHTML = textes[e] || '';

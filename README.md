@@ -17,7 +17,8 @@ Le calendrier est aussi publié sur internet : **https://yoanlenoane-prog.github
   en 2 minutes environ (`.github/workflows/deploy.yml`). Chez la fleuriste, la nouvelle version apparaît à la prochaine
   ouverture (ou avec F5).
 - **Sauvegarde Google Drive** : Menu › Sauvegarde › « Se connecter avec Google », avec le compte Gmail de la boutique.
-  Ensuite, tout est recopié automatiquement dans le dossier **Calendrier Arrosé** de son Drive, quelques secondes
+  Ensuite, tout est recopié automatiquement dans le dossier déjà existant **fleurs › dossier calendrier evenements**
+  de son Drive (majuscules et accents ignorés ; à changer dans `CHEMIN`, `sources/drive.js`), quelques secondes
   après chaque modification, toutes les 5 minutes et au retour du réseau :
   `commandes.json` (commandes, types d'évènements, réglages), `images/` (photos et PDF), `sauvegardes/` (une copie
   par jour, 30 jours). Le voyant en haut à droite indique l'état : vert = enregistré dans Drive, gris = hors connexion
@@ -156,8 +157,8 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
   d'Edge/Chrome ; le navigateur ne garde que le lien vers le dossier, en IndexedDB ; repli sur IndexedDB si l'API
   n'existe pas), `exemples.js` (commandes d'exemple du premier lancement) et `polices/` (Jost, Cormorant Garamond,
   Caveat, sous licence SIL Open Font License).
-- `sources/drive.js` : sauvegarde Google Drive (Google Identity Services, portée `drive.file` : le calendrier ne voit
-  que les fichiers qu'il a créés ; API REST Drive v3 appelée directement par le navigateur). Fusion par commande :
+- `sources/drive.js` : sauvegarde Google Drive (Google Identity Services, portée `drive`, nécessaire pour retrouver
+  un dossier créé à la main ; API REST Drive v3 appelée directement par le navigateur). Fusion par commande :
   la version la plus récente (`modifieLe`) l'emporte, les suppressions sont mémorisées (`supprimees`).
 - `web/` : fichiers ajoutés à la version en ligne (`manifest.webmanifest`, `sw.js` pour l'ouverture hors connexion, icônes).
 - Aucune dépendance, aucun serveur. Les données ne sont envoyées que dans le Google Drive de la boutique, et
