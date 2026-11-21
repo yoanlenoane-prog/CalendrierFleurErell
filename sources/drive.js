@@ -2,20 +2,22 @@
 /*
  * Sauvegarde automatique dans Google Drive (version en ligne du calendrier).
  *
- * Après la connexion avec le compte Google de la boutique, tout est recopié dans le Drive :
- *   Calendrier Arrosé/commandes.json         les commandes, les types d'évènements et les réglages
- *   Calendrier Arrosé/images/                les photos et PDF des fiches
- *   Calendrier Arrosé/sauvegardes/           une copie par jour (30 derniers jours)
+ * Après la connexion avec le compte Google de la boutique, tout est recopié dans le dossier déjà
+ * existant « fleurs › dossier calendrier evenements » du Drive (CHEMIN ci-dessous) :
+ *   commandes.json         les commandes, les types d'évènements et les réglages
+ *   images/                les photos et PDF des fiches
+ *   sauvegardes/           une copie par jour (30 derniers jours)
  * L'envoi se fait quelques secondes après chaque modification, toutes les 5 minutes,
  * au retour du réseau et à chaque ouverture. Les données restent aussi sur l'ordinateur (hors connexion).
  *
- * Portée « drive.file » : le calendrier ne voit que les fichiers qu'il a lui-même créés dans le Drive.
+ * Portée « drive » : nécessaire pour retrouver un dossier créé à la main dans le Drive.
  * Aucun serveur : le navigateur obtient un jeton Google et parle directement à Google Drive.
  */
 const Drive = (() => {
   const CLIENT_ID = '822058356046-leo1560gm79g6vbv193973s39328ilfe.apps.googleusercontent.com';
-  const PORTEE = 'https://www.googleapis.com/auth/drive.file';
-  const NOM_DOSSIER = 'Calendrier Arrosé';
+  const PORTEE = 'https://www.googleapis.com/auth/drive';
+  const VERSION_PORTEE = 2;  // à augmenter si PORTEE ou CHEMIN changent : la fleuriste devra se reconnecter
+  const CHEMIN = ['fleurs', 'dossier calendrier evenements']; // majuscules et accents ignorés
   const NOM_FICHIER = 'commandes.json';
   const NB_COPIES = 30;
   const CLE = 'calendrier-arrose.drive';
@@ -24,6 +26,11 @@ const Drive = (() => {
   const DOSSIER_MIME = 'application/vnd.google-apps.folder';
 
   let memo = lireMemo();     // jeton, identifiants des dossiers, dernière synchro…
+  if (memo.connecte && memo.versionPortee !== VERSION_PORTEE) {
+    // Ancienne version (dossier « Calendrier Arrosé ») : nouvel accord Google et nouveau dossier.
+    memo = { connecte: true, besoinAccord: true, derniereSynchro: memo.derniereSynchro };
+    ecrireMemo();
+  }
   let etat = 'deconnecte';   // deconnecte | synchro | ok | horsligne | reconnecter | erreur | indisponible
   let detail = '';
   let enCours = false;
@@ -83,6 +90,11 @@ const Drive = (() => {
           const a = attente; attente = null;
           if (!a) return;
           if (r.error) return a.reject(new Error(r.error_description || r.error));
+          if (!window.google.accounts.oauth2.hasGrantedAllScopes(r, PORTEE)) {
+            return a.reject(new Error('l’accès à Google Drive n’a pas été coché dans la fenêtre Google'));
+          }
+          memo.versionPortee = VERSION_PORTEE;
+          memo.besoinAccord = false;
           memo.jeton = r.access_token;
           memo.expire = Date.now() + Number(r.expires_in || 3600) * 1000;
           memo.connecte = true;
@@ -97,7 +109,7 @@ const Drive = (() => {
     }
     return new Promise((resolve, reject) => {
       attente = { resolve, reject };
-      clientJeton.requestAccessToken({ prompt: interactif && !memo.connecte ? 'consent' : '' });
+      clientJeton.requestAccessToken({ prompt: interactif && (!memo.connecte || memo.besoinAccord) ? 'consent' : '' });
       if (!interactif) setTimeout(() => { if (attente) { attente = null; reject(new Error('silence')); } }, 15000);
     });
   }
@@ -163,12 +175,37 @@ const Drive = (() => {
     return appel('PATCH', `${API}/${id}`, { corps: JSON.stringify({ trashed: true }), entetes: { 'Content-Type': 'application/json' } });
   }
 
-  /* Trouve (ou crée) le dossier « Calendrier Arrosé » et ses sous-dossiers. */
+  function normaliser(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+  function nomDossier() { return CHEMIN.join(' › '); }
+
+  /* Retrouve le dossier existant « fleurs › dossier calendrier evenements » (où qu'il soit dans le Drive). */
+  async function trouverDossier() {
+    const dossiers = [];
+    let page = '';
+    do {
+      const q = encodeURIComponent(`mimeType='${DOSSIER_MIME}' and trashed=false`);
+      const r = await appel('GET', `${API}?q=${q}&fields=nextPageToken,files(id,name,parents)&pageSize=1000${page ? '&pageToken=' + page : ''}`);
+      dossiers.push(...r.files);
+      page = r.nextPageToken || '';
+    } while (page);
+    const parId = new Map(dossiers.map((d) => [d.id, d]));
+    const correspond = (d, i) => {
+      if (i < 0) return true;
+      if (!d || normaliser(d.name) !== normaliser(CHEMIN[i])) return false;
+      return i === 0 || (d.parents || []).some((p) => correspond(parId.get(p), i - 1));
+    };
+    const trouve = dossiers.find((d) => correspond(d, CHEMIN.length - 1));
+    if (!trouve) {
+      const e = new Error(`le dossier « ${nomDossier()} » est introuvable dans le Google Drive de ce compte`);
+      e.code = 'introuvable'; throw e;
+    }
+    return trouve.id;
+  }
+
+  /* Prépare le dossier de destination et ses sous-dossiers « images » et « sauvegardes ». */
   async function preparerDossiers() {
     if (!(await existe(memo.dossier))) {
-      const q = encodeURIComponent(`name='${NOM_DOSSIER}' and mimeType='${DOSSIER_MIME}' and 'root' in parents and trashed=false`);
-      const r = await appel('GET', `${API}?q=${q}&fields=files(id)&orderBy=createdTime`);
-      memo.dossier = r.files.length ? r.files[0].id : await creerDossier(NOM_DOSSIER, 'root');
+      memo.dossier = await trouverDossier();
       memo.images = memo.copies = memo.fichier = memo.versionDistante = null;
       ecrireMemo();
     }
@@ -187,6 +224,7 @@ const Drive = (() => {
     if (enCours) { relancer = true; return; }
     enCours = true;
     try {
+      if (memo.besoinAccord) { changerEtat('reconnecter'); return; }
       if (!jeton()) {
         try { await demanderJeton(false); } catch (e) { changerEtat('reconnecter'); return; }
       }
@@ -264,6 +302,7 @@ const Drive = (() => {
 
   return {
     possible,
+    nomDossier,
     etat() { return etat; },
     detail() { return detail; },
     connecte() { return !!memo.connecte; },
