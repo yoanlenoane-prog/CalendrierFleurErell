@@ -498,7 +498,8 @@ async function majRappelSauvegarde() {
   $('#etat-sauvegarde').textContent = derniere
     ? `Dernière sauvegarde le ${new Date(derniere).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.`
     : 'Aucune sauvegarde pour le moment.';
-  const besoin = commandes.length > 0 && (jours === null || jours >= 14);
+  const synchro = Drive.connecte() && Drive.derniereSynchro() && Date.now() - new Date(Drive.derniereSynchro()).getTime() < 3 * 864e5;
+  const besoin = commandes.length > 0 && (jours === null || jours >= 14) && !synchro;
   $('#rappel-sauvegarde').hidden = !besoin;
   $('#point-sauvegarde').hidden = !besoin;
   $('#point-menu').hidden = !besoin;
@@ -518,6 +519,85 @@ async function importer(fichier) {
   } catch (e) {
     alert(e.message);
   }
+}
+
+/* ---------- Google Drive ---------- */
+
+function quand(iso) {
+  const d = new Date(iso);
+  const memeJour = cleDate(d) === cleDate(new Date());
+  const heure = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return memeJour ? `aujourd'hui à ${heure}` : `le ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${heure}`;
+}
+
+function majDrive() {
+  const e = Drive.etat();
+  const derniere = Drive.derniereSynchro();
+  const pastille = $('#pastille-drive');
+  const libelles = { synchro: 'Envoi vers Drive…', ok: 'Enregistré dans Drive', horsligne: 'Hors connexion', reconnecter: 'Reconnecter Google Drive', erreur: 'Problème Google Drive' };
+  pastille.hidden = !libelles[e];
+  pastille.className = 'pastille-drive etat-' + e;
+  $('.pastille-texte', pastille).textContent = libelles[e] || '';
+  pastille.title = e === 'ok' && derniere ? `Dernier envoi ${quand(derniere)}` : (e === 'erreur' ? Drive.detail() : (libelles[e] || ''));
+
+  const textes = {
+    indisponible: 'La sauvegarde dans Google Drive fonctionne avec la version en ligne du calendrier (adresse internet), pas avec le fichier ouvert depuis l’ordinateur.',
+    deconnecte: 'Connectez le compte Google de la boutique : vos commandes, réglages, photos et PDF seront recopiés automatiquement dans le dossier <strong>Calendrier Arrosé</strong> de son Google Drive, quelques secondes après chaque modification.',
+    reconnecter: 'La connexion à Google a expiré. Vos modifications sont gardées sur cet ordinateur : cliquez sur « Se reconnecter » pour les envoyer.',
+    horsligne: 'Pas de connexion internet. Vos modifications sont gardées sur cet ordinateur et partiront dans Google Drive au retour du réseau.',
+    synchro: 'Envoi en cours vers le dossier <strong>Calendrier Arrosé</strong> de Google Drive…',
+    ok: `Tout est enregistré dans le dossier <strong>Calendrier Arrosé</strong> de Google Drive${derniere ? ` (dernier envoi ${quand(derniere)})` : ''}. Chaque modification y est envoyée automatiquement.`,
+    erreur: `L’envoi vers Google Drive n’a pas abouti : ${echapper(Drive.detail())}. Vos modifications sont gardées sur cet ordinateur ; un nouvel essai aura lieu dans quelques minutes.`,
+  };
+  $('#info-drive').innerHTML = textes[e] || '';
+  const connecter = $('#btn-drive-connecter');
+  connecter.hidden = !(e === 'deconnecte' || e === 'reconnecter');
+  connecter.textContent = e === 'reconnecter' ? 'Se reconnecter' : 'Se connecter avec Google';
+  $('#btn-drive-synchro').hidden = !(e === 'ok' || e === 'erreur' || e === 'horsligne');
+  $('#btn-drive-deconnecter').hidden = !Drive.connecte() || e === 'indisponible';
+}
+
+async function connecterDrive() {
+  const bouton = $('#btn-drive-connecter');
+  bouton.disabled = true;
+  try {
+    await Drive.connecter();
+    if (Drive.etat() === 'ok') messageFlottant('Commandes enregistrées dans Google Drive');
+  } catch (e) {
+    alert('La connexion à Google n’a pas abouti. Réessayez, et acceptez l’accès dans la fenêtre Google.\n(détail : ' + e.message + ')');
+  } finally {
+    bouton.disabled = false;
+  }
+}
+
+function deconnecterDrive() {
+  if (!confirm('Arrêter l’envoi automatique vers Google Drive ?\nLes commandes restent sur cet ordinateur et le dossier du Drive n’est pas effacé.')) return;
+  Drive.deconnecter();
+  majRappelSauvegarde();
+}
+
+/* Des commandes ont été modifiées sur un autre ordinateur : on rafraîchit l'affichage. */
+async function apresChangementDistant() {
+  await chargerTypes();
+  await chargerCommandes();
+  if (!$('#page-taches').hidden) afficherTaches();
+  allerAuMois(moisAffiche, { alerte: false });
+  majRappelSauvegarde();
+}
+
+let driveDemarre = false;
+function demarrerDrive() {
+  if (driveDemarre) return;
+  driveDemarre = true;
+  Drive.surEtat(() => { majDrive(); majRappelSauvegarde(); });
+  Drive.surChangementDistant(apresChangementDistant);
+  Stockage.surModification(() => Drive.planifier());
+  $('#btn-drive-connecter').onclick = connecterDrive;
+  $('#btn-drive-synchro').onclick = () => Drive.synchroniserMaintenant();
+  $('#btn-drive-deconnecter').onclick = deconnecterDrive;
+  $('#pastille-drive').onclick = () => (Drive.etat() === 'reconnecter' ? connecterDrive() : ouvrirSauvegarde());
+  Drive.demarrer();
+  majDrive();
 }
 
 /* ---------- Évènements ---------- */
@@ -1273,6 +1353,7 @@ async function lancerCalendrier() {
   allerAuMois(new Date());
   majRappelSauvegarde();
   majInfoDossier();
+  demarrerDrive();
 }
 
 async function demarrer() {
@@ -1295,3 +1376,8 @@ async function demarrer() {
 }
 
 demarrer();
+
+// Version en ligne : permet l'installation sur le bureau et l'ouverture sans internet.
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => { /* rien */ });
+}

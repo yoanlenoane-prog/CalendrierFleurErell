@@ -29,6 +29,7 @@ const remplacer = (avant, apres) => {
 remplacer('<link rel="stylesheet" href="style.css">', '<style>\n' + fontFace + '\n' + lire('style.css') + '\n</style>');
 remplacer('<script src="exemples.js"></script>', script('exemples.js'));
 remplacer('<script src="stockage.js"></script>', script('stockage.js'));
+remplacer('<script src="drive.js"></script>', script('drive.js'));
 remplacer('<script src="app.js"></script>', script('app.js'));
 fs.writeFileSync(path.join(__dirname, 'Calendrier Arrose.html'), html);
 console.log('Calendrier Arrose.html créé (' + Math.round(html.length / 1024) + ' Ko)');

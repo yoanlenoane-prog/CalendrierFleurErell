@@ -9,6 +9,31 @@ dans le dossier du calendrier.
 
 ---
 
+## Version en ligne avec sauvegarde Google Drive
+
+Le calendrier est aussi publié sur internet : **https://yoanlenoane-prog.github.io/CalendrierFleurErell/**
+
+- **Mises à jour automatiques** : chaque modification acceptée sur la branche `main` de ce dépôt republie le site
+  en 2 minutes environ (`.github/workflows/deploy.yml`). Chez la fleuriste, la nouvelle version apparaît à la prochaine
+  ouverture (ou avec F5).
+- **Sauvegarde Google Drive** : Menu › Sauvegarde › « Se connecter avec Google », avec le compte Gmail de la boutique.
+  Ensuite, tout est recopié automatiquement dans le dossier **Calendrier Arrosé** de son Drive, quelques secondes
+  après chaque modification, toutes les 5 minutes et au retour du réseau :
+  `commandes.json` (commandes, types d'évènements, réglages), `images/` (photos et PDF), `sauvegardes/` (une copie
+  par jour, 30 jours). Le voyant en haut à droite indique l'état : vert = enregistré dans Drive, gris = hors connexion
+  (les modifications attendent sur l'ordinateur), blanc « Reconnecter » = cliquer dessus pour se reconnecter.
+- **Changer d'ordinateur** : ouvrir l'adresse, se connecter avec Google : toutes les commandes reviennent.
+- **Installer sur le bureau** : dans Edge ou Chrome, icône « Installer » dans la barre d'adresse.
+- **Passer de l'ancien fichier à la version en ligne** : dans l'ancien fichier, Menu › Sauvegarde › « Télécharger la
+  sauvegarde » ; dans la version en ligne, Menu › Sauvegarde › « Choisir un fichier de sauvegarde », puis se connecter
+  avec Google.
+
+Réglages côté GitHub et Google (une seule fois) : Settings › Pages › Source « GitHub Actions » (le dépôt doit être
+public, ou avec un abonnement GitHub Pro) ; dans Google Cloud, l'ID client OAuth doit autoriser l'origine
+`https://yoanlenoane-prog.github.io` et le compte Gmail de la boutique doit figurer dans les utilisateurs test.
+
+---
+
 ## Mode d'emploi
 
 ### 1. Installation (une seule fois)
@@ -131,4 +156,9 @@ Téléchargez le nouveau `Calendrier Arrose.html` (étapes 2 à 4) et remplacez 
   d'Edge/Chrome ; le navigateur ne garde que le lien vers le dossier, en IndexedDB ; repli sur IndexedDB si l'API
   n'existe pas), `exemples.js` (commandes d'exemple du premier lancement) et `polices/` (Jost, Cormorant Garamond,
   Caveat, sous licence SIL Open Font License).
-- Aucune dépendance, aucun serveur, aucune donnée envoyée sur Internet.
+- `sources/drive.js` : sauvegarde Google Drive (Google Identity Services, portée `drive.file` : le calendrier ne voit
+  que les fichiers qu'il a créés ; API REST Drive v3 appelée directement par le navigateur). Fusion par commande :
+  la version la plus récente (`modifieLe`) l'emporte, les suppressions sont mémorisées (`supprimees`).
+- `web/` : fichiers ajoutés à la version en ligne (`manifest.webmanifest`, `sw.js` pour l'ouverture hors connexion, icônes).
+- Aucune dépendance, aucun serveur. Les données ne sont envoyées que dans le Google Drive de la boutique, et
+  seulement après la connexion Google (version en ligne).

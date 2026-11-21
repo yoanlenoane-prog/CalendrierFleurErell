@@ -1,0 +1,14 @@
+{
+  "name": "Calendrier des commandes – Arrosé",
+  "short_name": "Calendrier Arrosé",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#9E1F3F",
+  "theme_color": "#9E1F3F",
+  "icons": [
+    { "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icones/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
