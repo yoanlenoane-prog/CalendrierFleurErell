@@ -16,6 +16,8 @@ const Stockage = (() => {
   const NOM_BASE = 'calendrier-arrose';
   const SOUS_DOSSIER = 'donnees-calendrier';
   const NB_SAUVEGARDES_AUTO = 30;
+  const CLES_REGLAGES = ['types', 'derniereSauvegarde', 'initialise', 'delaiRelance', 'joursALivrer', 'supprimees', 'partagesModifieLe'];
+  const CLES_PARTAGEES = ['types', 'delaiRelance', 'joursALivrer']; // réglages recopiés dans Google Drive
   const TYPES_MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml', pdf: 'application/pdf' };
 
   let base = null;          // IndexedDB
@@ -28,6 +30,7 @@ const Stockage = (() => {
   let reglages = {};
   const images = new Map(); // nom -> { blob, url }
   let file = Promise.resolve();
+  let ecouteur = null;      // prévenu après chaque modification (sauvegarde Google Drive)
 
   /* ---------- Outils ---------- */
 
@@ -43,6 +46,7 @@ const Stockage = (() => {
   }
   function imagesDe(c) { return [...(c.inspirations || []), ...(c.moodboard || [])]; }
   function copie(o) { return JSON.parse(JSON.stringify(o)); }
+  function signaler() { if (ecouteur) { try { ecouteur(); } catch (e) { /* rien */ } } }
 
   function base64VersBlob(b64, nom) {
     const binaire = atob(b64);
@@ -100,13 +104,8 @@ const Stockage = (() => {
 
   async function chargerDepuisNavigateur() {
     commandes = await transaction(['commandes'], 'readonly', (tx) => tx.objectStore('commandes').getAll());
-    reglages = {
-      types: await idbLire('reglages', 'types'),
-      derniereSauvegarde: await idbLire('reglages', 'derniereSauvegarde'),
-      initialise: await idbLire('reglages', 'initialise'),
-      delaiRelance: await idbLire('reglages', 'delaiRelance'),
-      joursALivrer: await idbLire('reglages', 'joursALivrer'),
-    };
+    reglages = {};
+    for (const cle of CLES_REGLAGES) reglages[cle] = await idbLire('reglages', cle);
     images.clear();
     await new Promise((resolve, reject) => {
       const tx = base.transaction(['images'], 'readonly');
@@ -175,7 +174,7 @@ const Stockage = (() => {
         await ecrireFichier(dossier, 'reglages.json', JSON.stringify(reglages, null, 2));
       } else {
         await transaction(['reglages'], 'readwrite', (tx) => {
-          for (const cle of ['types', 'derniereSauvegarde', 'initialise', 'delaiRelance', 'joursALivrer']) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
+          for (const cle of CLES_REGLAGES) tx.objectStore('reglages').put(reglages[cle] ?? null, cle);
         });
       }
     });
@@ -247,6 +246,22 @@ const Stockage = (() => {
     }
   }
 
+  /* Fusion avec Google Drive : pour chaque commande, la version la plus récente l'emporte ;
+     une commande supprimée (date dans « supprimees ») ne revient pas. */
+  function fusionner(locales, supLocales, distantes, supDistantes) {
+    const sup = { ...(supLocales || {}) };
+    for (const [id, d] of Object.entries(supDistantes || {})) if (!sup[id] || d > sup[id]) sup[id] = d;
+    const limite = new Date(Date.now() - 365 * 864e5).toISOString();
+    for (const id of Object.keys(sup)) if (sup[id] < limite) delete sup[id];
+    const parId = new Map();
+    for (const c of [...locales, ...distantes]) {
+      const a = parId.get(c.id);
+      if (!a || (c.modifieLe || '') > (a.modifieLe || '')) parId.set(c.id, c);
+    }
+    return { commandes: [...parId.values()].filter((c) => !(sup[c.id] && sup[c.id] >= (c.modifieLe || ''))), supprimees: sup };
+  }
+  const signature = (liste) => JSON.stringify(liste.map((c) => c.id + '@' + (c.modifieLe || '')).sort());
+
   /* Traduit les erreurs du navigateur en explications simples (avec le nom technique entre parenthèses). */
   function erreurClaire(e) {
     if (e && e.name === 'AbortError') return e;
@@ -277,7 +292,11 @@ const Stockage = (() => {
         return 'pret';
       }
       poignee = await idbLire('reglages', 'dossier');
-      if (!poignee) return 'choisir';
+      if (!poignee) {
+        // Version en ligne : pas de dossier à choisir, les commandes vont dans Google Drive.
+        if (location.protocol !== 'file:') { await ouvrirNavigateur(); return 'pret'; }
+        return 'choisir';
+      }
       try {
         if ((await poignee.queryPermission({ mode: 'readwrite' })) === 'granted') {
           await brancherDossier(poignee);
@@ -334,15 +353,19 @@ const Stockage = (() => {
       await persisterCommandes();
       const utilisees = new Set(commandes.flatMap(imagesDe));
       if (avant) await retirerImages(imagesDe(avant).filter((n) => !utilisees.has(n)));
+      signaler();
       return copie(nouvelle);
     },
 
     async supprimerCommande(c) {
       const avant = commandes.find((x) => x.id === c.id);
       commandes = commandes.filter((x) => x.id !== c.id);
+      reglages.supprimees = { ...(reglages.supprimees || {}), [c.id]: new Date().toISOString() };
       await persisterCommandes();
+      await persisterReglages();
       const utilisees = new Set(commandes.flatMap(imagesDe));
       if (avant) await retirerImages(imagesDe(avant).filter((n) => !utilisees.has(n)));
+      signaler();
     },
 
     /* Image ou document PDF. Pour un PDF, le nom d'origine est gardé dans le nom du fichier. */
@@ -387,17 +410,82 @@ const Stockage = (() => {
         await persisterImage(nom, blob);
         memoriserImage(nom, blob);
       }
-      commandes = copie(donnees.commandes);
+      // La sauvegarde restaurée devient la version la plus récente (aussi pour Google Drive).
+      const maintenant = new Date().toISOString();
+      const restaurees = new Set(donnees.commandes.map((c) => c.id));
+      const sup = { ...(reglages.supprimees || {}) };
+      for (const c of commandes) if (!restaurees.has(c.id)) sup[c.id] = maintenant;
+      for (const id of restaurees) delete sup[id];
+      reglages.supprimees = sup;
+      commandes = copie(donnees.commandes).map((c) => ({ ...c, modifieLe: maintenant }));
       await persisterCommandes();
-      if (Array.isArray(donnees.types) && donnees.types.length) { reglages.types = donnees.types; await persisterReglages(); }
+      if (Array.isArray(donnees.types) && donnees.types.length) { reglages.types = donnees.types; reglages.partagesModifieLe = maintenant; }
+      await persisterReglages();
       await this.nettoyerImages();
+      signaler();
       return commandes.length;
     },
 
     async derniereSauvegarde() { return reglages.derniereSauvegarde || null; },
     lireReglage(cle) { return reglages[cle] ?? null; },
-    async ecrireReglage(cle, valeur) { reglages[cle] = valeur; await persisterReglages(); },
+    async ecrireReglage(cle, valeur) {
+      reglages[cle] = valeur;
+      if (CLES_PARTAGEES.includes(cle)) reglages.partagesModifieLe = new Date().toISOString();
+      await persisterReglages();
+      if (CLES_PARTAGEES.includes(cle)) signaler();
+    },
     async lireTypes() { return reglages.types || null; },
-    async ecrireTypes(types) { reglages.types = copie(types); await persisterReglages(); },
+    async ecrireTypes(types) {
+      reglages.types = copie(types);
+      reglages.partagesModifieLe = new Date().toISOString();
+      await persisterReglages();
+      signaler();
+    },
+
+    /* ---------- Pour la sauvegarde Google Drive ---------- */
+
+    surModification(f) { ecouteur = f; },
+    imagesUtilisees() { return [...new Set(commandes.flatMap(imagesDe))]; },
+    blobImage(nom) { return images.has(nom) ? images.get(nom).blob : null; },
+    seulementExemples() { return commandes.every((c) => String(c.id).startsWith('exemple-')); },
+
+    pourDrive() {
+      const partages = {};
+      for (const cle of CLES_PARTAGEES) partages[cle] = reglages[cle] ?? null;
+      return {
+        application: 'calendrier-arrose', version: 1, enregistreLe: new Date().toISOString(),
+        commandes: copie(commandes), supprimees: reglages.supprimees || {},
+        reglages: partages, reglagesModifieLe: reglages.partagesModifieLe || '',
+      };
+    },
+
+    /* Intègre la version du Drive. remplacerTout : premier branchement d'un ordinateur qui n'a que les exemples.
+       Renvoie true si quelque chose a changé sur cet ordinateur. */
+    async integrerDistant(d, remplacerTout) {
+      if (!d || d.application !== 'calendrier-arrose' || !Array.isArray(d.commandes)) return false;
+      const avant = signature(commandes);
+      const r = remplacerTout
+        ? { commandes: d.commandes, supprimees: d.supprimees || {} }
+        : fusionner(commandes, reglages.supprimees, d.commandes, d.supprimees);
+      let change = signature(r.commandes) !== avant;
+      commandes = copie(r.commandes);
+      reglages.supprimees = r.supprimees;
+      const distants = d.reglages || {};
+      if ((d.reglagesModifieLe || '') > (reglages.partagesModifieLe || '') || (remplacerTout && d.reglagesModifieLe)) {
+        for (const cle of CLES_PARTAGEES) if (distants[cle] !== undefined && JSON.stringify(distants[cle]) !== JSON.stringify(reglages[cle] ?? null)) { reglages[cle] = distants[cle]; change = true; }
+        reglages.partagesModifieLe = d.reglagesModifieLe;
+      }
+      if (change) await persisterCommandes();
+      await persisterReglages();
+      return change;
+    },
+
+    async ajouterImageDistante(nom, blob) {
+      if (!/^[A-Za-z0-9_.-]+$/.test(nom)) return;
+      const type = TYPES_MIME[(nom.split('.').pop() || '').toLowerCase()];
+      if (type && blob.type !== type) blob = new Blob([blob], { type });
+      await persisterImage(nom, blob);
+      memoriserImage(nom, blob);
+    },
   };
 })();

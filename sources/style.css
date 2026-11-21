@@ -93,6 +93,23 @@ button { font-family: inherit; }
 }
 .resultat:hover, .resultat:focus { background: var(--framboise-pale); outline: none; }
 .resultat small { color: var(--texte-doux); margin-left: auto; white-space: nowrap; }
+/* Voyant Google Drive */
+.pastille-drive {
+  flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 6px 12px;
+  border-radius: 999px; border: 1px solid rgba(255,255,255,.45); background: transparent; color: #fff;
+  font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap;
+}
+.pastille-drive:hover { background: rgba(255,255,255,.12); }
+.pastille-drive .voyant { width: 9px; height: 9px; border-radius: 50%; background: #fff; }
+.pastille-drive.etat-ok .voyant { background: #7BC47F; }
+.pastille-drive.etat-synchro .voyant { background: #F2B544; animation: clignote 1s ease-in-out infinite; }
+.pastille-drive.etat-horsligne .voyant { background: #C9C2B8; }
+.pastille-drive.etat-reconnecter, .pastille-drive.etat-erreur { background: #fff; color: var(--framboise); border-color: #fff; font-weight: 600; }
+.pastille-drive.etat-reconnecter .voyant, .pastille-drive.etat-erreur .voyant { background: #C62F3A; }
+@keyframes clignote { 50% { opacity: .3; } }
+@media (max-width: 760px) { .pastille-drive .pastille-texte { display: none; } }
+.actions-drive { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
 .resultats .vide { padding: 12px; color: var(--texte-doux); font-size: 14px; }
 
 /* ---------- Barre du mois ---------- */
