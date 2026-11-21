@@ -17,8 +17,8 @@ Le calendrier est aussi publié sur internet : **https://yoanlenoane-prog.github
   en 2 minutes environ (`.github/workflows/deploy.yml`). Chez la fleuriste, la nouvelle version apparaît à la prochaine
   ouverture (ou avec F5).
 - **Sauvegarde Google Drive** : Menu › Sauvegarde › « Se connecter avec Google », avec le compte Gmail de la boutique.
-  Ensuite, tout est recopié automatiquement dans le dossier déjà existant **fleurs › dossier calendrier evenements**
-  de son Drive (majuscules et accents ignorés ; à changer dans `CHEMIN`, `sources/drive.js`), quelques secondes
+  Ensuite, tout est recopié automatiquement dans le dossier déjà existant **FLEURS › DOSSIER CALENDRIER EVENEMENT**
+  de son Drive (majuscules, accents et « s » final ignorés ; à changer dans `CHEMIN`, `sources/drive.js`), quelques secondes
   après chaque modification, toutes les 5 minutes et au retour du réseau :
   `commandes.json` (commandes, types d'évènements, réglages), `images/` (photos et PDF), `sauvegardes/` (une copie
   par jour, 30 jours). Le voyant en haut à droite indique l'état : vert = enregistré dans Drive, gris = hors connexion
