@@ -3,7 +3,7 @@
  * Sauvegarde automatique dans Google Drive (version en ligne du calendrier).
  *
  * Après la connexion avec le compte Google de la boutique, tout est recopié dans le dossier déjà
- * existant « fleurs › dossier calendrier evenements » du Drive (CHEMIN ci-dessous) :
+ * existant « FLEURS › DOSSIER CALENDRIER EVENEMENT » du Drive (CHEMIN ci-dessous) :
  *   commandes.json         les commandes, les types d'évènements et les réglages
  *   images/                les photos et PDF des fiches
  *   sauvegardes/           une copie par jour (30 derniers jours)
@@ -17,7 +17,7 @@ const Drive = (() => {
   const CLIENT_ID = '822058356046-leo1560gm79g6vbv193973s39328ilfe.apps.googleusercontent.com';
   const PORTEE = 'https://www.googleapis.com/auth/drive';
   const VERSION_PORTEE = 2;  // à augmenter si PORTEE ou CHEMIN changent : la fleuriste devra se reconnecter
-  const CHEMIN = ['fleurs', 'dossier calendrier evenements']; // majuscules et accents ignorés
+  const CHEMIN = ['FLEURS', 'DOSSIER CALENDRIER EVENEMENT']; // majuscules, accents et « s » final ignorés
   const NOM_FICHIER = 'commandes.json';
   const NB_COPIES = 30;
   const CLE = 'calendrier-arrose.drive';
@@ -175,10 +175,13 @@ const Drive = (() => {
     return appel('PATCH', `${API}/${id}`, { corps: JSON.stringify({ trashed: true }), entetes: { 'Content-Type': 'application/json' } });
   }
 
-  function normaliser(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+  function normaliser(t) { // « Évènements » = « EVENEMENT »
+    return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ').trim().split(' ').map((m) => m.replace(/s$/, '')).join(' ');
+  }
   function nomDossier() { return CHEMIN.join(' › '); }
 
-  /* Retrouve le dossier existant « fleurs › dossier calendrier evenements » (où qu'il soit dans le Drive). */
+  /* Retrouve le dossier existant « FLEURS › DOSSIER CALENDRIER EVENEMENT » (où qu'il soit dans le Drive). */
   async function trouverDossier() {
     const dossiers = [];
     let page = '';
